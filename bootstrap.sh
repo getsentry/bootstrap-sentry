@@ -526,11 +526,11 @@ if [ -z "$SKIP_GETSENTRY" ] && [ -d "$GETSENTRY_ROOT" ]; then
   bootstrap "$GETSENTRY_ROOT"
   direnv allow
 
-  source "$(direnv hook $(get_shell_name))"
+  eval "$(direnv hook $(get_shell_name))"
   cd "$GETSENTRY_ROOT"
   log "You can now run getsentry via \`getsentry devserver\`"
 else
-  source "$(direnv hook $(get_shell_name))"
+  eval "$(direnv hook $(get_shell_name))"
   cd "$SENTRY_ROOT"
   log "You can now run sentry via \`sentry devserver\`"
 fi
