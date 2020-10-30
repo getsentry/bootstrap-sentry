@@ -478,7 +478,7 @@ bootstrap() {
     log "Bootstrapping env: $1"
     cd "$1" && source .venv/bin/activate
 
-    # If config exists, then we probably bootstrapped already, so run `make develop` instead
+    # Only run `make bootstrap` if config file does not exist
     if [ ! -f "$HOME/.sentry/sentry.conf.py" ]; then
       cd "$1" && make bootstrap
     fi
