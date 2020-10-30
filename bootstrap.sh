@@ -479,9 +479,7 @@ bootstrap() {
     cd "$1" && source .venv/bin/activate
 
     # If config exists, then we probably bootstrapped already, so run `make develop` instead
-    if [ -f "$HOME/.sentry/sentry.conf.py" ]; then
-      cd "$1" && make develop
-    else
+    if [ ! -f "$HOME/.sentry/sentry.conf.py" ]; then
       cd "$1" && make bootstrap
     fi
 
