@@ -426,8 +426,7 @@ setup_pyenv() {
 }
 
 install_volta() {
-  # Assume that VOLTA_HOME being set means volta is installed
-  if [ -z "$VOLTA_HOME" ]; then
+  if ! command -v volta &> /dev/null; then
     log "Install volta"
     curl https://get.volta.sh | bash
     source "$(get_shell_startup_script)"
@@ -480,7 +479,7 @@ bootstrap() {
     cd "$1" && source .venv/bin/activate
 
     # If config exists, then we probably bootstrapped already, so run `make develop` instead
-    if [ -f "$HOME/.sentry/sentry.conf.py"]; then
+    if [ -f "$HOME/.sentry/sentry.conf.py" ]; then
       cd "$1" && make develop
     else
       cd "$1" && make bootstrap
