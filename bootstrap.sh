@@ -6,7 +6,7 @@ set -e
 
 [[ "$1" = "--debug" || -o xtrace ]] && STRAP_DEBUG="1"
 STRAP_SUCCESS=""
-STRAP_ISSUES_URL='https://github.com/getsentry/getsentry/issues/new'
+STRAP_ISSUES_URL='https://github.com/getsentry/bootstrap-sentry/issues/new'
 OSNAME="$(uname -s)"
 
 # TODO: Support other OSes
