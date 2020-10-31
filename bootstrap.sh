@@ -523,13 +523,12 @@ if [ -z "$SKIP_GETSENTRY" ] && [ -d "$GETSENTRY_ROOT" ]; then
   bootstrap "$GETSENTRY_ROOT"
   direnv allow
 
-  exec "$SHELL"
   cd "$GETSENTRY_ROOT"
-  log "You can now run getsentry via \`getsentry devserver\`"
+  log "You'll need to restart your shell and then run getsentry: \`exec $SHELL && getsentry devserver\'"
 else
   exec "$SHELL"
   cd "$SENTRY_ROOT"
-  log "You can now run sentry via \`sentry devserver\`"
+  log "You'll need to restart your shell and then run sentry: \`exec $SHELL && sentry devserver\'"
 fi
 
 
