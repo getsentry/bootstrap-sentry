@@ -425,6 +425,28 @@ setup_pyenv() {
   fi
 }
 
+install_sentry_env_vars() {
+  local _script
+  _script=$(get_shell_startup_script)
+
+  logn "Installing sentry env vars to startup script..."
+
+  if [ -n "$_script" ]; then
+    # This will be used to measure webpack
+    if ! grep -qF "SENTRY_INSTRUMENTATION" "$_script"; then
+      echo "export SENTRY_INSTRUMENTATION=1" >> "$_script"
+    fi
+    if ! grep -qF "SENTRY_POST_MERGE_AUTO_UPDATE" "$_script"; then
+      echo "export SENTRY_POST_MERGE_AUTO_UPDATE=1" >> "$_script"
+    fi
+    if ! grep -qF "SENTRY_SPA_DSN" "$_script"; then
+      echo "export SENTRY_SPA_DSN=https://863de587a34a48c4a4ef1a9238fdb0b1@o19635.ingest.sentry.io/5270453" >> "$_script"
+    fi
+  fi
+
+  logk
+}
+
 install_volta() {
   if ! command -v volta &> /dev/null; then
     log "Install volta"
@@ -503,6 +525,7 @@ install_brewfile "$SENTRY_ROOT"
 setup_pyenv "$SENTRY_ROOT"
 install_volta
 install_direnv
+install_sentry_env_vars
 
 setup_virtualenv "$SENTRY_ROOT"
 
@@ -524,11 +547,11 @@ if [ -z "$SKIP_GETSENTRY" ] && [ -d "$GETSENTRY_ROOT" ]; then
   direnv allow
 
   cd "$GETSENTRY_ROOT"
-  log "You'll need to restart your shell and then run getsentry: \`exec $SHELL && getsentry devserver\'"
+  log "You'll need to restart your shell and then run getsentry: \`exec $SHELL && getsentry devserver\`"
 else
   exec "$SHELL"
   cd "$SENTRY_ROOT"
-  log "You'll need to restart your shell and then run sentry: \`exec $SHELL && sentry devserver\'"
+  log "You'll need to restart your shell and then run sentry: \`exec $SHELL && sentry devserver\`"
 fi
 
 
