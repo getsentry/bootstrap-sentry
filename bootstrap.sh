@@ -64,7 +64,11 @@ check_github_access() {
 }
 
 get_code_root_path() {
-  read -rp "--> Enter the absolute path to your code [$HOME/code]: " CODE_ROOT
+  if [ -z "$CODE_ROOT" ]; then
+    read -rp "--> Enter the absolute path to your code [$HOME/code]: " CODE_ROOT
+  else
+    echo "Installing into $CODE_ROOT"
+  fi
 
   if [ -z "$CODE_ROOT" ]; then
     CODE_ROOT="$HOME/code"
