@@ -4,6 +4,14 @@
 #/ Heavily inspired by https://github.com/MikeMcQuaid/strap
 set -e
 
+# Start somewhere predictable.
+cd $(dirname "$0")
+
+# Keep a log. h/t https://stackoverflow.com/a/25319102
+cp bootstrap.log bootstrap.log.bak 2>/dev/null || true
+exec > >(tee bootstrap.log)
+exec 2>&1
+
 [[ "$1" = "--debug" || -o xtrace ]] && STRAP_DEBUG="1"
 STRAP_SUCCESS=""
 STRAP_ISSUES_URL='https://github.com/getsentry/bootstrap-sentry/issues/new'
@@ -56,7 +64,11 @@ check_github_access() {
 }
 
 get_code_root_path() {
-  read -rp "--> Enter the absolute path to your code [$HOME/code]: " CODE_ROOT
+  if [ -z "$CODE_ROOT" ]; then
+    read -rp "--> Enter the absolute path to your code [$HOME/code]: " CODE_ROOT
+  else
+    echo "Installing into $CODE_ROOT"
+  fi
 
   if [ -z "$CODE_ROOT" ]; then
     CODE_ROOT="$HOME/code"
@@ -78,17 +90,18 @@ cleanup() {
   sudo_askpass rm -rf "$CLT_PLACEHOLDER" "$SUDO_ASKPASS" "$SUDO_ASKPASS_DIR"
   sudo --reset-timestamp
   if [ -z "$STRAP_SUCCESS" ]; then
+    echo
     if [ -n "$STRAP_STEP" ]; then
-      echo "!!! $STRAP_STEP FAILED" >&2
+      echo "!!! $STRAP_STEP FAILED"
       record_metric "bootstrap_failed" $STRAP_STEP
     else
-      echo "!!! FAILED" >&2
+      echo "!!! FAILED"
       record_metric "bootstrap_failed"
     fi
     if [ -z "$STRAP_DEBUG" ]; then
-      echo "!!! Run with '--debug' for debugging output." >&2
-      echo "!!! If you're stuck: file an issue with debugging output at:" >&2
-      echo "!!!   $STRAP_ISSUES_URL" >&2
+      echo "!!! Run with '--debug' for debugging output."
+      echo "!!! If you're stuck: file an issue with debugging output at:"
+      echo "!!!   $STRAP_ISSUES_URL"
     fi
   fi
 }
@@ -133,7 +146,7 @@ sudo_init() {
       fi
 
       unset SUDO_PASSWORD
-      echo "!!! Wrong password!" >&2
+      echo "!!! Wrong password!"
     done
 
     clear_debug
@@ -164,7 +177,7 @@ sudo_refresh() {
   reset_debug
 }
 
-abort() { STRAP_STEP="";   echo "!!! $*" >&2; exit 1; }
+abort() { STRAP_STEP="";   echo "!!! $*"; exit 1; }
 log()   { STRAP_STEP="$*"; sudo_refresh; echo "--> $*"; }
 logn()  { STRAP_STEP="$*"; sudo_refresh; printf -- "--> %s " "$*"; }
 logk()  { STRAP_STEP="";   echo "OK"; }
@@ -295,7 +308,7 @@ get_code_root_path
 check_github_access
 
 
-[ "$USER" = "root" ] && abort "Run Strap as yourself, not root."
+[ "$USER" = "root" ] && abort "Run as yourself, not root."
 groups | grep $Q -E "\b(admin)\b" || abort "Add $USER to the admin group."
 
 # Prevent sleeping during script execution, as long as the machine is on AC power
@@ -557,5 +570,5 @@ fi
 
 record_metric "bootstrap_passed"
 STRAP_SUCCESS="1"
-log "Your system is now Strap'd!"
+log "Your system is now bootstrapped! 🌮"
 
