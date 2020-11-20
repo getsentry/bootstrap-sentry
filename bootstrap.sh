@@ -46,12 +46,24 @@ check_github_access() {
 
   log "Checking GitHub access"
 
+  local github_message="Make sure that you set up your SSH keys correctly with Github. Read more in \
+https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/connecting-to-github-with-ssh"
+
+  if ! [[ -d $HOME/.ssh ]]; then
+    >&2 echo $github_message
+    exit -1
+  fi
+
   # Need to ignore exit code as it will always fail, need to parse stdout
   resp=$(ssh -T git@github.com 2>&1 || true)
   regex="Hi (.*)! You've successfully authenticated, but GitHub does not provide shell access\."
 
   if [[ $resp =~ $regex ]]; then
     GITHUB_USER=${BASH_REMATCH[1]}
+  else
+    >&2 echo $resp
+    >&2 echo $github_message
+    exit -1
   fi
 
   if [ -z "$GITHUB_USER" ]; then
