@@ -511,8 +511,7 @@ setup_virtualenv() {
   if ! command -v virtualenv &> /dev/null; then
     log "Installing virtualenv"
     # We need to change to the checkout to use Pyenv's Python
-    cd $1
-    python -m pip install virtualenv
+    cd "$1" && python -m pip install virtualenv
     cd -
     logk
   fi
@@ -586,4 +585,3 @@ fi
 record_metric "bootstrap_passed"
 STRAP_SUCCESS="1"
 log "Your system is now bootstrapped! 🌮"
-
