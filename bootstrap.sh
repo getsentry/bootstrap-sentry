@@ -485,6 +485,14 @@ bootstrap() {
 ## Beginning of execution ##
 ############################
 
+# TODO add env vars to ~/.sentryrc
+# This DSN is for our bootstrap script, not sure if we want it in profile
+# SENTRY_DSN=https://b70e44882d494c68a78ea1e51c2b17f0@o1.ingest.sentry.io/5480435
+# This will be used to measure webpack
+# SENTRY_INSTRUMENTATION=1
+
+install_sentry_cli
+
 OSNAME="$(uname -s)"
 # TODO: Support other OSes
 if [ "$OSNAME" != "Darwin" ]; then
@@ -529,13 +537,6 @@ software_update
 SENTRY_ROOT="$CODE_ROOT/sentry"
 GETSENTRY_ROOT="$CODE_ROOT/getsentry"
 
-# TODO add env vars to ~/.sentryrc
-# This DSN is for our bootstrap script, not sure if we want it in profile
-# SENTRY_DSN=https://b70e44882d494c68a78ea1e51c2b17f0@o1.ingest.sentry.io/5480435
-# This will be used to measure webpack
-# SENTRY_INSTRUMENTATION=1
-
-install_sentry_cli
 git_clone_repo "getsentry/sentry" "$SENTRY_ROOT"
 if [ -z "$SKIP_GETSENTRY" ] && ! git_clone_repo "getsentry/getsentry" "$GETSENTRY_ROOT" 2> /dev/null; then
   # git clone failed, assume no access to getsentry and skip further getsentry steps
