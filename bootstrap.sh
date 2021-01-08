@@ -282,8 +282,10 @@ software_update() {
     logk
   else
     echo
-    log "Installing software updates:"
-    if [ -z "$STRAP_CI" ]; then
+    if [ $1 == "reminder "]; then
+      log "You have system updates to install. Please check for updates."
+    elif [ -z "$STRAP_CI" ]; then
+      log "Installing software updates:"
       sudo_askpass softwareupdate --install --all
       xcode_license
     else
@@ -523,7 +525,6 @@ caffeinate -s -w $$ &
 install_xcode_cli
 xcode_license
 install_homebrew
-software_update
 
 ### Sentry stuff ###
 SENTRY_ROOT="$CODE_ROOT/sentry"
@@ -578,3 +579,5 @@ fi
 record_metric "bootstrap_passed"
 STRAP_SUCCESS="1"
 log "Your system is now bootstrapped! 🌮"
+
+software_update "reminder"
