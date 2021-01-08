@@ -4,7 +4,19 @@
 #/ Heavily inspired by https://github.com/MikeMcQuaid/strap
 set -e
 
-# NOTE: Go to "Beginning of execution" to skip over all these functions
+# Start somewhere predictable.
+cd $(dirname "$0")
+
+# Keep a log. h/t https://stackoverflow.com/a/25319102
+cp bootstrap.log bootstrap.log.bak 2>/dev/null || true
+exec > >(tee bootstrap.log)
+exec 2>&1
+
+[[ "$1" = "--debug" || -o xtrace ]] && STRAP_DEBUG="1"
+STRAP_SUCCESS=""
+STRAP_ISSUES_URL='https://github.com/getsentry/bootstrap-sentry/issues/new'
+
+# NOTE: Now jump to "Beginning of execution" to skip over all these functions
 
 record_metric() {
   if [ -n "$SKIP_METRICS" ]; then
@@ -475,19 +487,7 @@ bootstrap() {
 ## Beginning of execution ##
 ############################
 
-# Start somewhere predictable.
-cd $(dirname "$0")
-
-# Keep a log. h/t https://stackoverflow.com/a/25319102
-cp bootstrap.log bootstrap.log.bak 2>/dev/null || true
-exec > >(tee bootstrap.log)
-exec 2>&1
-
-[[ "$1" = "--debug" || -o xtrace ]] && STRAP_DEBUG="1"
-STRAP_SUCCESS=""
-STRAP_ISSUES_URL='https://github.com/getsentry/bootstrap-sentry/issues/new'
 OSNAME="$(uname -s)"
-
 # TODO: Support other OSes
 if [ "$OSNAME" != "Darwin" ]; then
   echo "'$OSNAME' not supported"
