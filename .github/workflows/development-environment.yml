@@ -1,0 +1,17 @@
+name: bootstrap
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  dev-env-cli:
+    runs-on: macos-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Execute bootstrap
+        run: ./bootstrap.sh
