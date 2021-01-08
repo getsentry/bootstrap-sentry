@@ -387,8 +387,9 @@ git_clone_repo() {
 # After using homebrew to install docker, we need to do some magic to avoid user needing to interactive with GUI
 # See: https://github.com/docker/for-mac/issues/2359#issuecomment-607154849 for why we need to do things below
 init_docker() {
-  # Need to start docker
-  if [ -d "/Applications/Docker.app" ]; then
+  # Need to start docker if it was freshly installed (docker server is not running)
+  if ! command -v docker &>/dev/null && [ -d "/Applications/Docker.app" ]; then
+    log "Making some changes to complete Docker initialization"
     # allow the app to run without confirmation
     xattr -d -r com.apple.quarantine /Applications/Docker.app
 
@@ -401,7 +402,8 @@ init_docker() {
     sudo_askpass /bin/chmod 644 /Library/LaunchDaemons/com.docker.vmnetd.plist
     sudo_askpass /bin/launchctl load /Library/LaunchDaemons/com.docker.vmnetd.plist
 
-    open -g -a Docker.app
+    log "About to open Docker.app"
+    open -g -a Docker.app || echo "We were unable to open Docker.app; Try again" && exit 1
   fi
 }
 
@@ -427,11 +429,7 @@ install_brewfile() {
   if [ -d "$1" ]; then
     log "Installing from sentry Brewfile"
     cd "$1" && brew bundle
-    # Need to start docker if it was freshly installed (docker server is not running)
-    if ! command -v docker &>/dev/null && [ -d "/Applications/Docker.app" ]; then
-      init_docker
-    fi
-
+    init_docker
     logk
   fi
 }
