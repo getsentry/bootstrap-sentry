@@ -15,13 +15,8 @@ exec 2>&1
 [[ "$1" = "--debug" || -o xtrace ]] && STRAP_DEBUG="1"
 STRAP_SUCCESS=""
 STRAP_ISSUES_URL='https://github.com/getsentry/bootstrap-sentry/issues/new'
-OSNAME="$(uname -s)"
 
-# TODO: Support other OSes
-if [ "$OSNAME" != "Darwin" ]; then
-  echo "'$OSNAME' not supported"
-  exit 1
-fi
+# NOTE: Now jump to "Beginning of execution" to skip over all these functions
 
 record_metric() {
   if [ -n "$SKIP_METRICS" ]; then
@@ -117,18 +112,6 @@ cleanup() {
     fi
   fi
 }
-
-trap "cleanup" EXIT
-
-if [ -n "$STRAP_DEBUG" ]; then
-  set -x
-else
-  STRAP_QUIET_FLAG="-q"
-  Q="$STRAP_QUIET_FLAG"
-fi
-
-STDIN_FILE_DESCRIPTOR="0"
-[ -t "$STDIN_FILE_DESCRIPTOR" ] && STRAP_INTERACTIVE="1"
 
 # functions for turning off debug for use when handling the user password
 clear_debug() {
@@ -309,37 +292,6 @@ software_update() {
     logk
   fi
 }
-
-# We want to always prompt for sudo password at least once rather than doing
-# root stuff unexpectedly.
-sudo_refresh
-
-# Before starting, get the user's code location root where we will clone sentry repos to
-get_code_root_path
-
-check_github_access
-
-
-[ "$USER" = "root" ] && abort "Run as yourself, not root."
-groups | grep $Q -E "\b(admin)\b" || abort "Add $USER to the admin group."
-
-# Prevent sleeping during script execution, as long as the machine is on AC power
-caffeinate -s -w $$ &
-
-install_xcode_cli
-xcode_license
-install_homebrew
-software_update
-
-### Sentry stuff ###
-SENTRY_ROOT="$CODE_ROOT/sentry"
-GETSENTRY_ROOT="$CODE_ROOT/getsentry"
-
-# TODO add env vars to ~/.sentryrc
-# This DSN is for our bootstrap script, not sure if we want it in profile
-# SENTRY_DSN=https://b70e44882d494c68a78ea1e51c2b17f0@o1.ingest.sentry.io/5480435
-# This will be used to measure webpack
-# SENTRY_INSTRUMENTATION=1
 
 get_shell_name() {
   case "$SHELL" in
@@ -529,13 +481,66 @@ bootstrap() {
   fi
 }
 
+############################
+## Beginning of execution ##
+############################
+
+OSNAME="$(uname -s)"
+# TODO: Support other OSes
+if [ "$OSNAME" != "Darwin" ]; then
+  echo "'$OSNAME' not supported"
+  exit 1
+fi
+
+trap "cleanup" EXIT
+
+if [ -n "$STRAP_DEBUG" ]; then
+  set -x
+else
+  STRAP_QUIET_FLAG="-q"
+  Q="$STRAP_QUIET_FLAG"
+fi
+
+STDIN_FILE_DESCRIPTOR="0"
+[ -t "$STDIN_FILE_DESCRIPTOR" ] && STRAP_INTERACTIVE="1"
+
+# We want to always prompt for sudo password at least once rather than doing
+# root stuff unexpectedly.
+sudo_refresh
+
+# Before starting, get the user's code location root where we will clone sentry repos to
+get_code_root_path
+
+check_github_access
+
+
+[ "$USER" = "root" ] && abort "Run as yourself, not root."
+groups | grep $Q -E "\b(admin)\b" || abort "Add $USER to the admin group."
+
+# Prevent sleeping during script execution, as long as the machine is on AC power
+caffeinate -s -w $$ &
+
+install_xcode_cli
+xcode_license
+install_homebrew
+software_update
+
+### Sentry stuff ###
+SENTRY_ROOT="$CODE_ROOT/sentry"
+GETSENTRY_ROOT="$CODE_ROOT/getsentry"
+
+# TODO add env vars to ~/.sentryrc
+# This DSN is for our bootstrap script, not sure if we want it in profile
+# SENTRY_DSN=https://b70e44882d494c68a78ea1e51c2b17f0@o1.ingest.sentry.io/5480435
+# This will be used to measure webpack
+# SENTRY_INSTRUMENTATION=1
+
 install_sentry_cli
 git_clone_repo "getsentry/sentry" "$SENTRY_ROOT"
 if [ -z "$SKIP_GETSENTRY" ] && ! git_clone_repo "getsentry/getsentry" "$GETSENTRY_ROOT" 2> /dev/null; then
   # git clone failed, assume no access to getsentry and skip further getsentry steps
   SKIP_GETSENTRY=1
 fi
-
 
 install_brewfile "$SENTRY_ROOT"
 setup_pyenv "$SENTRY_ROOT"
@@ -569,7 +574,6 @@ else
   cd "$SENTRY_ROOT"
   log "You'll need to restart your shell and then run sentry: \`exec $SHELL && sentry devserver\`"
 fi
-
 
 record_metric "bootstrap_passed"
 STRAP_SUCCESS="1"
