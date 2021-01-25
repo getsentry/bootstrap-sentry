@@ -14,4 +14,4 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Execute bootstrap
-        run: ./bootstrap.sh --debug
+        run: sudo ./bootstrap.sh
