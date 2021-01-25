@@ -4,12 +4,13 @@
 #/ Heavily inspired by https://github.com/MikeMcQuaid/strap
 set -e
 
-# Start somewhere predictable.
-cd $(dirname "$0")
-
-# Keep a log. h/t https://stackoverflow.com/a/25319102
-cp bootstrap.log bootstrap.log.bak 2>/dev/null || true
-exec > >(tee bootstrap.log)
+bootstrap_sentry=$HOME/.sentry/bootstrap-sentry
+mkdir -p "$bootstrap_sentry"
+# Create a temp file first before redirecting to it because bash/curling
+# runs under /dev/fd and makes things complicated https://stackoverflow.com/a/25319102
+temp_file=`mktemp $bootstrap_sentry/bootstrap-sentry.log.XXX`
+# Keep a log. h/t https://stackoverflow.com/a/25319102 & create a temp file first
+exec > >(tee $temp_file)
 exec 2>&1
 
 [[ "$1" = "--debug" || -o xtrace ]] && STRAP_DEBUG="1"
