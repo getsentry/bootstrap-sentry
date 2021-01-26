@@ -1,0 +1,23 @@
+name: bootstrap
+on:
+  push:
+    branches:
+      - main
+  # Remove this before merging
+  pull_request:
+
+jobs:
+  new-bootstrap-release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Make release
+        run: |
+          curl -sL https://sentry.io/get-cli/ | bash
+          export SENTRY_DSN=https://b70e44882d494c68a78ea1e51c2b17f0@o1.ingest.sentry.io/5480435
+          eval "$(sentry-cli bash-hook)"
+          export VERSION=`sentry-cli releases propose-version`
+          sentry-cli releases new --finale "$VERSION"
