@@ -356,9 +356,17 @@ init_docker() {
     sudo_askpass /bin/chmod 544 /Library/PrivilegedHelperTools/com.docker.vmnetd
     sudo_askpass /bin/chmod 644 /Library/LaunchDaemons/com.docker.vmnetd.plist
     sudo_askpass /bin/launchctl load /Library/LaunchDaemons/com.docker.vmnetd.plist
+    logk
+  fi
+}
 
+start_docker() {
+  if ! docker system info &>/dev/null; then
     log "About to open Docker.app"
-    open -g -a Docker.app || echo "We were unable to open Docker.app; Try again" && exit 1
+    # At a later stage in the script, we're going to execute
+    # ensure_docker_server which waits for it to be ready
+    open -g -a Docker.app
+    logk
   fi
 }
 
@@ -545,6 +553,7 @@ if [ -z "$SKIP_GETSENTRY" ] && ! git_clone_repo "getsentry/getsentry" "$GETSENTR
 fi
 
 install_brewfile "$SENTRY_ROOT"
+start_docker
 setup_pyenv "$SENTRY_ROOT"
 install_volta
 install_direnv
