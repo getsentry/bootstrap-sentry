@@ -4,8 +4,9 @@
 #/ Heavily inspired by https://github.com/MikeMcQuaid/strap
 set -e
 
-# Start somewhere predictable.
-cd $(dirname "$0")
+bootstrap_sentry="$HOME/.sentry/bootstrap-sentry"
+mkdir -p "$bootstrap_sentry"
+cd "$bootstrap_sentry"
 
 # Keep a log. h/t https://stackoverflow.com/a/25319102
 cp bootstrap.log bootstrap.log.bak 2>/dev/null || true
