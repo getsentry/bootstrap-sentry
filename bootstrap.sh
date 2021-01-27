@@ -324,10 +324,10 @@ install_sentry_cli() {
     log "Installing sentry-cli"
     curl -sL https://sentry.io/get-cli/ | bash
     logk
-
-    export SENTRY_DSN=https://b70e44882d494c68a78ea1e51c2b17f0@o1.ingest.sentry.io/5480435
     eval "$(sentry-cli bash-hook)"
   fi
+  # Definning it outside of the block ensures that we get reports for 2nd time executions
+  export SENTRY_DSN=https://b70e44882d494c68a78ea1e51c2b17f0@o1.ingest.sentry.io/5480435
 }
 
 # Clone repo ($1) to path ($2)
