@@ -326,7 +326,7 @@ install_sentry_cli() {
     logk
     eval "$(sentry-cli bash-hook)"
   fi
-  # Definning it outside of the block ensures that we get reports for 2nd time executions
+  # Defining it outside of the block ensures that we get reports for 2nd time executions
   export SENTRY_DSN=https://b70e44882d494c68a78ea1e51c2b17f0@o1.ingest.sentry.io/5480435
 }
 
