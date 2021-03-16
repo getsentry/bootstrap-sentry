@@ -12,8 +12,8 @@ jobs:
     # These variables remove all interactivity
     env:
       CODE_ROOT: $HOME/code
-      STRAP_INTERACTIVE: false
-      SUDO_ASKPASS: false
+      # STRAP_INTERACTIVE: false
+      # SUDO_ASKPASS: false
 
     steps:
       - uses: actions/checkout@v2
