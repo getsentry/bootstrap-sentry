@@ -3,6 +3,7 @@
 #/ Install development dependencies on macOS.
 #/ Heavily inspired by https://github.com/MikeMcQuaid/strap
 set -e
+set -x
 
 bootstrap_sentry="$HOME/.sentry/bootstrap-sentry"
 mkdir -p "$bootstrap_sentry"
