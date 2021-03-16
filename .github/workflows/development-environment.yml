@@ -9,6 +9,10 @@ jobs:
   dev-env-cli:
     runs-on: macos-latest
     timeout-minutes: 20
+    # These variables remove all interactivity
+    env:
+      CODE_ROOT: $HOME/code
+      STRAP_INTERACTIVE: false
 
     steps:
       - uses: actions/checkout@v2
