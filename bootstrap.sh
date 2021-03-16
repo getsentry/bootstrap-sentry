@@ -165,7 +165,7 @@ BASH
 }
 
 sudo_refresh() {
-  clear_debug
+  # clear_debug
   if [ -n "$SUDO_ASKPASS" ]; then
     sudo --askpass --validate
   else

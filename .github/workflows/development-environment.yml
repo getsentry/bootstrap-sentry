@@ -13,6 +13,7 @@ jobs:
     env:
       CODE_ROOT: $HOME/code
       STRAP_INTERACTIVE: false
+      SUDO_ASKPASS: false
 
     steps:
       - uses: actions/checkout@v2
