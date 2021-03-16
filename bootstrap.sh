@@ -4,8 +4,9 @@
 #/ Heavily inspired by https://github.com/MikeMcQuaid/strap
 set -e
 
-# Start somewhere predictable.
-cd $(dirname "$0")
+bootstrap_sentry="$HOME/.sentry/bootstrap-sentry"
+mkdir -p "$bootstrap_sentry"
+cd "$bootstrap_sentry"
 
 # Keep a log. h/t https://stackoverflow.com/a/25319102
 cp bootstrap.log bootstrap.log.bak 2>/dev/null || true
@@ -282,8 +283,10 @@ software_update() {
     logk
   else
     echo
-    log "Installing software updates:"
-    if [ -z "$STRAP_CI" ]; then
+    if [ $1 == "reminder "]; then
+      log "You have system updates to install. Please check for updates."
+    elif [ -z "$STRAP_CI" ]; then
+      log "Installing software updates:"
       sudo_askpass softwareupdate --install --all
       xcode_license
     else
@@ -321,10 +324,10 @@ install_sentry_cli() {
     log "Installing sentry-cli"
     curl -sL https://sentry.io/get-cli/ | bash
     logk
-
-    export SENTRY_DSN=https://b70e44882d494c68a78ea1e51c2b17f0@o1.ingest.sentry.io/5480435
     eval "$(sentry-cli bash-hook)"
   fi
+  # Defining it outside of the block ensures that we get reports for 2nd time executions
+  export SENTRY_DSN=https://b70e44882d494c68a78ea1e51c2b17f0@o1.ingest.sentry.io/5480435
 }
 
 # Clone repo ($1) to path ($2)
@@ -353,9 +356,17 @@ init_docker() {
     sudo_askpass /bin/chmod 544 /Library/PrivilegedHelperTools/com.docker.vmnetd
     sudo_askpass /bin/chmod 644 /Library/LaunchDaemons/com.docker.vmnetd.plist
     sudo_askpass /bin/launchctl load /Library/LaunchDaemons/com.docker.vmnetd.plist
+    logk
+  fi
+}
 
+start_docker() {
+  if ! docker system info &>/dev/null; then
     log "About to open Docker.app"
-    open -g -a Docker.app || echo "We were unable to open Docker.app; Try again" && exit 1
+    # At a later stage in the script, we're going to execute
+    # ensure_docker_server which waits for it to be ready
+    open -g -a Docker.app
+    logk
   fi
 }
 
@@ -523,7 +534,6 @@ caffeinate -s -w $$ &
 install_xcode_cli
 xcode_license
 install_homebrew
-software_update
 
 ### Sentry stuff ###
 SENTRY_ROOT="$CODE_ROOT/sentry"
@@ -543,6 +553,7 @@ if [ -z "$SKIP_GETSENTRY" ] && ! git_clone_repo "getsentry/getsentry" "$GETSENTR
 fi
 
 install_brewfile "$SENTRY_ROOT"
+start_docker
 setup_pyenv "$SENTRY_ROOT"
 install_volta
 install_direnv
@@ -578,3 +589,5 @@ fi
 record_metric "bootstrap_passed"
 STRAP_SUCCESS="1"
 log "Your system is now bootstrapped! 🌮"
+
+software_update "reminder"
