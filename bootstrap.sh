@@ -46,20 +46,20 @@ check_github_access() {
 https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/connecting-to-github-with-ssh"
 
   if ! [[ -d $HOME/.ssh ]]; then
-    >&2 echo $github_message
-    exit -1
+    >&2 echo "$github_message"
+    exit 1
   fi
 
   # Need to ignore exit code as it will always fail, need to parse stdout
   resp=$(ssh -T git@github.com 2>&1 || true)
   regex="Hi (.*)! You've successfully authenticated, but GitHub does not provide shell access\."
 
-  if [[ $resp =~ $regex ]]; then
+  if [[ "$resp" =~ $regex ]]; then
     GITHUB_USER=${BASH_REMATCH[1]}
   else
-    >&2 echo $resp
-    >&2 echo $github_message
-    exit -1
+    >&2 echo "$resp"
+    >&2 echo "$github_message"
+    exit 1
   fi
 
   if [ -z "$GITHUB_USER" ]; then
@@ -101,7 +101,7 @@ cleanup() {
     echo
     if [ -n "$STRAP_STEP" ]; then
       echo "!!! $STRAP_STEP FAILED"
-      record_metric "bootstrap_failed" $STRAP_STEP
+      record_metric "bootstrap_failed" "$STRAP_STEP"
     else
       echo "!!! FAILED"
       record_metric "bootstrap_failed"
@@ -213,7 +213,7 @@ install_xcode_cli() {
 
 # Check if the Xcode license is agreed to and agree if not.
 xcode_license() {
-  if /usr/bin/xcrun clang 2>&1 | grep $Q license; then
+  if /usr/bin/xcrun clang 2>&1 | grep "$Q" license; then
     if [ -n "$STRAP_INTERACTIVE" ]; then
       logn "Asking for Xcode license confirmation:"
       sudo_askpass xcodebuild -license
@@ -252,11 +252,11 @@ install_homebrew() {
 
   # Download Homebrew.
   export GIT_DIR="$HOMEBREW_REPOSITORY/.git" GIT_WORK_TREE="$HOMEBREW_REPOSITORY"
-  git init $Q
+  git init "$Q"
   git config remote.origin.url "https://github.com/Homebrew/brew"
   git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*"
-  git fetch $Q --tags --force
-  git reset $Q --hard origin/master
+  git fetch "$Q" --tags --force
+  git reset "$Q" --hard origin/master
   unset GIT_DIR GIT_WORK_TREE
   logk
 
@@ -279,11 +279,11 @@ RUBY
 # Check and install any remaining software updates.
 software_update() {
   logn "Checking for software updates:"
-  if softwareupdate -l 2>&1 | grep $Q "No new software available."; then
+  if softwareupdate -l 2>&1 | grep "$Q" "No new software available."; then
     logk
   else
     echo
-    if [ $1 == "reminder "]; then
+    if [ "$1" == "reminder" ]; then
       log "You have system updates to install. Please check for updates."
     elif [ -z "$STRAP_CI" ]; then
       log "Installing software updates:"
@@ -437,6 +437,7 @@ install_volta() {
   if ! command -v volta &> /dev/null; then
     log "Install volta"
     curl https://get.volta.sh | bash
+    # shellcheck disable=SC1090
     source "$(get_shell_startup_script)"
     logk
   fi
@@ -477,6 +478,7 @@ setup_virtualenv() {
 bootstrap() {
   if docker system info &>/dev/null; then
     log "Bootstrapping env: $1"
+    # shellcheck disable=SC1091
     cd "$1" && source .venv/bin/activate
 
     # Only run `make bootstrap` if config file does not exist
@@ -526,7 +528,7 @@ check_github_access
 
 
 [ "$USER" = "root" ] && abort "Run as yourself, not root."
-groups | grep $Q -E "\b(admin)\b" || abort "Add $USER to the admin group."
+groups | grep "$Q" -E "\b(admin)\b" || abort "Add $USER to the admin group."
 
 # Prevent sleeping during script execution, as long as the machine is on AC power
 caffeinate -s -w $$ &
@@ -581,6 +583,7 @@ if [ -z "$SKIP_GETSENTRY" ] && [ -d "$GETSENTRY_ROOT" ]; then
   cd "$GETSENTRY_ROOT"
   log "You'll need to restart your shell and then run getsentry: \`exec $SHELL && getsentry devserver\`"
 else
+  # shellcheck disable=SC2093
   exec "$SHELL"
   cd "$SENTRY_ROOT"
   log "You'll need to restart your shell and then run sentry: \`exec $SHELL && sentry devserver\`"
