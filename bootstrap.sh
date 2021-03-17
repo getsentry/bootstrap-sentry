@@ -284,7 +284,7 @@ software_update() {
     logk
   else
     echo
-    if [ $1 == "reminder "]; then
+    if [ $1 == "reminder" ]; then
       log "You have system updates to install. Please check for updates."
     elif [ -z "$STRAP_CI" ]; then
       log "Installing software updates:"
