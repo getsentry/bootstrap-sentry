@@ -213,7 +213,7 @@ install_xcode_cli() {
 
 # Check if the Xcode license is agreed to and agree if not.
 xcode_license() {
-  if /usr/bin/xcrun clang 2>&1 | grep "$Q" license; then
+  if /usr/bin/xcrun clang 2>&1 | grep $Q license; then
     if [ -n "$STRAP_INTERACTIVE" ]; then
       logn "Asking for Xcode license confirmation:"
       sudo_askpass xcodebuild -license
@@ -252,11 +252,11 @@ install_homebrew() {
 
   # Download Homebrew.
   export GIT_DIR="$HOMEBREW_REPOSITORY/.git" GIT_WORK_TREE="$HOMEBREW_REPOSITORY"
-  git init "$Q"
+  git init $Q
   git config remote.origin.url "https://github.com/Homebrew/brew"
   git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*"
-  git fetch "$Q" --tags --force
-  git reset "$Q" --hard origin/master
+  git fetch $Q --tags --force
+  git reset $Q --hard origin/master
   unset GIT_DIR GIT_WORK_TREE
   logk
 
@@ -279,7 +279,7 @@ RUBY
 # Check and install any remaining software updates.
 software_update() {
   logn "Checking for software updates:"
-  if softwareupdate -l 2>&1 | grep "$Q" "No new software available."; then
+  if softwareupdate -l 2>&1 | grep $Q "No new software available."; then
     logk
   else
     echo
