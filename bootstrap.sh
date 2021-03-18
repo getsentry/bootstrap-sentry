@@ -213,7 +213,8 @@ install_xcode_cli() {
 
 # Check if the Xcode license is agreed to and agree if not.
 xcode_license() {
-  if /usr/bin/xcrun clang 2>&1 | grep "$Q" license; then
+  # shellcheck disable=SC2086
+  if /usr/bin/xcrun clang 2>&1 | grep $Q license; then
     if [ -n "$STRAP_INTERACTIVE" ]; then
       logn "Asking for Xcode license confirmation:"
       sudo_askpass xcodebuild -license
@@ -252,11 +253,14 @@ install_homebrew() {
 
   # Download Homebrew.
   export GIT_DIR="$HOMEBREW_REPOSITORY/.git" GIT_WORK_TREE="$HOMEBREW_REPOSITORY"
-  git init "$Q"
+  # shellcheck disable=SC2086
+  git init $Q
   git config remote.origin.url "https://github.com/Homebrew/brew"
   git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*"
-  git fetch "$Q" --tags --force
-  git reset "$Q" --hard origin/master
+  # shellcheck disable=SC2086
+  git fetch $Q --tags --force
+  # shellcheck disable=SC2086
+  git reset $Q --hard origin/master
   unset GIT_DIR GIT_WORK_TREE
   logk
 
@@ -279,7 +283,8 @@ RUBY
 # Check and install any remaining software updates.
 software_update() {
   logn "Checking for software updates:"
-  if softwareupdate -l 2>&1 | grep "$Q" "No new software available."; then
+  # shellcheck disable=SC2086
+  if softwareupdate -l 2>&1 | grep $Q "No new software available."; then
     logk
   else
     echo
@@ -528,7 +533,7 @@ check_github_access
 
 
 [ "$USER" = "root" ] && abort "Run as yourself, not root."
-groups | grep "$Q" -E "\b(admin)\b" || abort "Add $USER to the admin group."
+groups | grep $Q -E "\b(admin)\b" || abort "Add $USER to the admin group."
 
 # Prevent sleeping during script execution, as long as the machine is on AC power
 caffeinate -s -w $$ &
