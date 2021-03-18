@@ -12,7 +12,8 @@ jobs:
     # These variables remove all interactivity
     env:
       CODE_ROOT: $HOME/code
-      # STRAP_INTERACTIVE: false
+      STRAP_DEBUG: 1
+      SKIP_METRICS: 1
       # SUDO_ASKPASS: false
 
     steps:

@@ -3,7 +3,6 @@
 #/ Install development dependencies on macOS.
 #/ Heavily inspired by https://github.com/MikeMcQuaid/strap
 set -e
-set -x
 
 bootstrap_sentry="$HOME/.sentry/bootstrap-sentry"
 mkdir -p "$bootstrap_sentry"
@@ -525,11 +524,12 @@ sudo_refresh
 # Before starting, get the user's code location root where we will clone sentry repos to
 get_code_root_path
 
-check_github_access
+# This will allow the CI to skip this step
+[ -n "${STRAP_INTERACTIVE}" ] && check_github_access
 
 
 [ "$USER" = "root" ] && abort "Run as yourself, not root."
-groups | grep "$Q" -E "\b(admin)\b" || abort "Add $USER to the admin group."
+groups | grep $Q -E "\b(admin)\b" || abort "Add $USER to the admin group."
 
 # Prevent sleeping during script execution, as long as the machine is on AC power
 caffeinate -s -w $$ &
