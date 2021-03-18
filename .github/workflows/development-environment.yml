@@ -12,9 +12,9 @@ jobs:
     # These variables remove all interactivity
     env:
       CODE_ROOT: $HOME/code
-      STRAP_DEBUG: 1
       SKIP_METRICS: 1
-      # SUDO_ASKPASS: false
+      STRAP_CI: 1
+      STRAP_DEBUG: 1
 
     steps:
       - uses: actions/checkout@v2

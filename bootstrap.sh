@@ -525,7 +525,7 @@ sudo_refresh
 get_code_root_path
 
 # This will allow the CI to skip this step
-[ -n "${STRAP_INTERACTIVE}" ] && check_github_access
+[ -n "${STRAP_CI}" ] && check_github_access
 
 
 [ "$USER" = "root" ] && abort "Run as yourself, not root."
