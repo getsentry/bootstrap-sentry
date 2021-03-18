@@ -279,12 +279,14 @@ RUBY
 # Check and install any remaining software updates.
 software_update() {
   logn "Checking for software updates:"
-  if softwareupdate -l 2>&1 | grep $Q "No new software available."; then
+  updates=$(softwareupdate -l 2>&1)
+  if $updates | grep $Q "No new software available."; then
     logk
   else
     echo
     if [ "$1" == "reminder" ]; then
-      log "You have system updates to install. Please check for updates."
+      log "You have system updates to install. Please check for updates if you wish to install them."
+      log $updates
     elif [ -z "$STRAP_CI" ]; then
       log "Installing software updates:"
       sudo_askpass softwareupdate --install --all
@@ -525,7 +527,7 @@ sudo_refresh
 get_code_root_path
 
 # This will allow the CI to skip this step
-[ -n "${STRAP_CI}" ] && check_github_access
+[ -z "${STRAP_CI+x}" ] && check_github_access
 
 
 [ "$USER" = "root" ] && abort "Run as yourself, not root."
