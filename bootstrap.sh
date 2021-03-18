@@ -213,6 +213,7 @@ install_xcode_cli() {
 
 # Check if the Xcode license is agreed to and agree if not.
 xcode_license() {
+  # shellcheck disable=SC2086
   if /usr/bin/xcrun clang 2>&1 | grep $Q license; then
     if [ -n "$STRAP_INTERACTIVE" ]; then
       logn "Asking for Xcode license confirmation:"
@@ -252,10 +253,13 @@ install_homebrew() {
 
   # Download Homebrew.
   export GIT_DIR="$HOMEBREW_REPOSITORY/.git" GIT_WORK_TREE="$HOMEBREW_REPOSITORY"
+  # shellcheck disable=SC2086
   git init $Q
   git config remote.origin.url "https://github.com/Homebrew/brew"
   git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*"
+  # shellcheck disable=SC2086
   git fetch $Q --tags --force
+  # shellcheck disable=SC2086
   git reset $Q --hard origin/master
   unset GIT_DIR GIT_WORK_TREE
   logk
@@ -280,6 +284,7 @@ RUBY
 software_update() {
   logn "Checking for software updates:"
   updates=$(softwareupdate -l 2>&1)
+  # shellcheck disable=SC2086
   if $updates | grep $Q "No new software available."; then
     logk
   else
