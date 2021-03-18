@@ -341,7 +341,7 @@ install_sentry_cli() {
 git_clone_repo() {
   if [ ! -d "$2" ]; then
     log "Cloning $1 to $2"
-    git clone "git@github.com:$1.git" "$2"
+    git clone "git@github.com:$1.git" "$2" || git clone "https://github.com/getsentry/$1.git" "$2"
     logk
   fi
 }
