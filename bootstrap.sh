@@ -32,7 +32,7 @@ record_metric() {
     fi
   fi
 
-  curl -s -d "{\"event\": \"$1\", \"name\": \"$METRIC_USER\", \"step\": \"$2\"}" -H 'Content-Type: application/json' https://product-eng-webhooks-vmrqv3f7nq-uw.a.run.app/metrics/bootstrap-dev-env/webhook > /dev/null
+  curl -s -d "{\"event\": \"$1\", \"name\": \"$METRIC_USER\", \"step\": \"$2\"}" -H 'Content-Type: application/json' https://product-eng-webhooks-vmrqv3f7nq-uw.a.run.app/metrics/bootstrap-dev-env/webhook >/dev/null
 }
 
 # Run this early to ensure that the user is identified w/ github
@@ -46,7 +46,7 @@ check_github_access() {
 https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/connecting-to-github-with-ssh"
 
   if ! [[ -d $HOME/.ssh ]]; then
-    >&2 echo "$github_message"
+    echo >&2 "$github_message"
     exit 1
   fi
 
@@ -57,8 +57,8 @@ https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/
   if [[ "$resp" =~ $regex ]]; then
     GITHUB_USER=${BASH_REMATCH[1]}
   else
-    >&2 echo "$resp"
-    >&2 echo "$github_message"
+    echo >&2 "$resp"
+    echo >&2 "$github_message"
     exit 1
   fi
 
@@ -146,11 +146,12 @@ sudo_init() {
     done
 
     clear_debug
-    SUDO_PASSWORD_SCRIPT="$(cat <<BASH
+    SUDO_PASSWORD_SCRIPT="$(
+      cat <<BASH
 #!/bin/bash
 echo "$SUDO_PASSWORD"
 BASH
-)"
+    )"
     unset SUDO_PASSWORD
     SUDO_ASKPASS_DIR="$(mktemp -d)"
     SUDO_ASKPASS="$(mktemp "$SUDO_ASKPASS_DIR"/strap-askpass-XXXXXXXX)"
@@ -173,10 +174,25 @@ sudo_refresh() {
   reset_debug
 }
 
-abort() { STRAP_STEP="";   echo "!!! $*"; exit 1; }
-log()   { STRAP_STEP="$*"; sudo_refresh; echo "--> $*"; }
-logn()  { STRAP_STEP="$*"; sudo_refresh; printf -- "--> %s " "$*"; }
-logk()  { STRAP_STEP="";   echo "OK"; }
+abort() {
+  STRAP_STEP=""
+  echo "!!! $*"
+  exit 1
+}
+log() {
+  STRAP_STEP="$*"
+  sudo_refresh
+  echo "--> $*"
+}
+logn() {
+  STRAP_STEP="$*"
+  sudo_refresh
+  printf -- "--> %s " "$*"
+}
+logk() {
+  STRAP_STEP=""
+  echo "OK"
+}
 escape() {
   printf '%s' "${1//\'/\'}"
 }
@@ -188,16 +204,15 @@ install_xcode_cli() {
     CLT_PLACEHOLDER="/tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress"
     sudo_askpass touch "$CLT_PLACEHOLDER"
 
-    CLT_PACKAGE=$(softwareupdate -l | \
-                  grep -B 1 "Command Line Tools" | \
-                  awk -F"*" '/^ *\*/ {print $2}' | \
-                  sed -e 's/^ *Label: //' -e 's/^ *//' | \
-                  sort -V |
-                  tail -n1)
+    CLT_PACKAGE=$(softwareupdate -l |
+      grep -B 1 "Command Line Tools" |
+      awk -F"*" '/^ *\*/ {print $2}' |
+      sed -e 's/^ *Label: //' -e 's/^ *//' |
+      sort -V |
+      tail -n1)
     sudo_askpass softwareupdate -i "$CLT_PACKAGE"
     sudo_askpass rm -f "$CLT_PLACEHOLDER"
-    if ! [ -f "/Library/Developer/CommandLineTools/usr/bin/git" ]
-    then
+    if ! [ -f "/Library/Developer/CommandLineTools/usr/bin/git" ]; then
       if [ -n "$STRAP_INTERACTIVE" ]; then
         echo
         logn "Requesting user install of Xcode Command Line Tools:"
@@ -231,13 +246,12 @@ install_homebrew() {
   HOMEBREW_PREFIX="$(brew --prefix 2>/dev/null || true)"
   [ -n "$HOMEBREW_PREFIX" ] || HOMEBREW_PREFIX="/usr/local"
   [ -d "$HOMEBREW_PREFIX" ] || sudo_askpass mkdir -p "$HOMEBREW_PREFIX"
-  if [ "$HOMEBREW_PREFIX" = "/usr/local" ]
-  then
+  if [ "$HOMEBREW_PREFIX" = "/usr/local" ]; then
     sudo_askpass chown "root:wheel" "$HOMEBREW_PREFIX" 2>/dev/null || true
   fi
   (
     cd "$HOMEBREW_PREFIX"
-    sudo_askpass mkdir -p               Cellar Frameworks bin etc include lib opt sbin share var
+    sudo_askpass mkdir -p Cellar Frameworks bin etc include lib opt sbin share var
     sudo_askpass chown -R "$USER:admin" Cellar Frameworks bin etc include lib opt sbin share var
   )
 
@@ -246,8 +260,7 @@ install_homebrew() {
   [ -d "$HOMEBREW_REPOSITORY" ] || sudo_askpass mkdir -p "$HOMEBREW_REPOSITORY"
   sudo_askpass chown -R "$USER:admin" "$HOMEBREW_REPOSITORY"
 
-  if [ $HOMEBREW_PREFIX != $HOMEBREW_REPOSITORY ]
-  then
+  if [ $HOMEBREW_PREFIX != $HOMEBREW_REPOSITORY ]; then
     ln -sf "$HOMEBREW_REPOSITORY/bin/brew" "$HOMEBREW_PREFIX/bin/brew"
   fi
 
@@ -305,12 +318,12 @@ software_update() {
 
 get_shell_name() {
   case "$SHELL" in
-    /bin/bash)
-      echo "bash"
-      ;;
-    /bin/zsh)
-      echo "zsh"
-      ;;
+  /bin/bash)
+    echo "bash"
+    ;;
+  /bin/zsh)
+    echo "zsh"
+    ;;
   esac
 }
 
@@ -386,10 +399,10 @@ ensure_docker_server() {
     # Wait for the server to start up, if applicable.
     local i=0
     while ! docker system info &>/dev/null; do
-      (( i++ == 0 )) && printf %s '-- Waiting for Docker to finish starting up...' || printf '.'
+      ((i++ == 0)) && printf %s '-- Waiting for Docker to finish starting up...' || printf '.'
       sleep 1
     done
-    (( i )) && printf '\n'
+    ((i)) && printf '\n'
     logk
   fi
 }
@@ -427,13 +440,13 @@ install_sentry_env_vars() {
   if [ -n "$_script" ]; then
     # This will be used to measure webpack
     if ! grep -qF "SENTRY_INSTRUMENTATION" "$_script"; then
-      echo "export SENTRY_INSTRUMENTATION=1" >> "$_script"
+      echo "export SENTRY_INSTRUMENTATION=1" >>"$_script"
     fi
     if ! grep -qF "SENTRY_POST_MERGE_AUTO_UPDATE" "$_script"; then
-      echo "export SENTRY_POST_MERGE_AUTO_UPDATE=1" >> "$_script"
+      echo "export SENTRY_POST_MERGE_AUTO_UPDATE=1" >>"$_script"
     fi
     if ! grep -qF "SENTRY_SPA_DSN" "$_script"; then
-      echo "export SENTRY_SPA_DSN=https://863de587a34a48c4a4ef1a9238fdb0b1@o19635.ingest.sentry.io/5270453" >> "$_script"
+      echo "export SENTRY_SPA_DSN=https://863de587a34a48c4a4ef1a9238fdb0b1@o19635.ingest.sentry.io/5270453" >>"$_script"
     fi
   fi
 
@@ -441,7 +454,7 @@ install_sentry_env_vars() {
 }
 
 install_volta() {
-  if ! command -v volta &> /dev/null; then
+  if ! command -v volta &>/dev/null; then
     log "Install volta"
     curl https://get.volta.sh | bash
     # shellcheck disable=SC1090
@@ -458,7 +471,7 @@ install_direnv_startup() {
 
   if [ -n "$_script" ]; then
     if ! grep -qF "direnv hook" "$_script"; then
-      echo "eval \"\$(direnv hook $(get_shell_name))\"" >> "$_script"
+      echo "eval \"\$(direnv hook $(get_shell_name))\"" >>"$_script"
     else
       logn " skipping (already installed)... "
     fi
@@ -468,7 +481,7 @@ install_direnv_startup() {
 }
 
 install_direnv() {
-  if ! command -v direnv &> /dev/null; then
+  if ! command -v direnv &>/dev/null; then
     log "Installing direnv"
     brew install direnv
     install_direnv_startup
@@ -534,7 +547,6 @@ get_code_root_path
 # This will allow the CI to skip this step
 [ -z "${STRAP_CI+x}" ] && check_github_access
 
-
 [ "$USER" = "root" ] && abort "Run as yourself, not root."
 groups | grep $Q -E "\b(admin)\b" || abort "Add $USER to the admin group."
 
@@ -557,7 +569,7 @@ GETSENTRY_ROOT="$CODE_ROOT/getsentry"
 
 install_sentry_cli
 git_clone_repo "getsentry/sentry" "$SENTRY_ROOT"
-if [ -z "$SKIP_GETSENTRY" ] && ! git_clone_repo "getsentry/getsentry" "$GETSENTRY_ROOT" 2> /dev/null; then
+if [ -z "$SKIP_GETSENTRY" ] && ! git_clone_repo "getsentry/getsentry" "$GETSENTRY_ROOT" 2>/dev/null; then
   # git clone failed, assume no access to getsentry and skip further getsentry steps
   SKIP_GETSENTRY=1
 fi
