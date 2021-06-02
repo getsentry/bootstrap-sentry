@@ -586,7 +586,7 @@ fi
 
 # Most of the following actions require to be within the Sentry checkout
 cd "$SENTRY_ROOT"
-# install_brewfile "$SENTRY_ROOT"
+install_brewfile "$SENTRY_ROOT"
 start_docker
 setup_pyenv "$SENTRY_ROOT"
 install_volta
