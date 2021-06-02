@@ -45,7 +45,10 @@ check_github_access() {
   local github_message="Make sure that you set up your SSH keys correctly with Github. Read more in \
 https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/connecting-to-github-with-ssh"
 
-  if ! [[ -d $HOME/.ssh ]]; then
+  # When running on CI we will clone from https
+  if [ -z "${STRAP_CI+x}" ]; then
+    GIT_URL_PREFIX="https://github.com/getsentry/"
+  elif ! [[ -d $HOME/.ssh ]]; then
     echo >&2 "$github_message"
     exit 1
   fi
@@ -544,13 +547,9 @@ sudo_refresh
 # Before starting, get the user's code location root where we will clone sentry repos to
 get_code_root_path
 
-# Changes if we're executing within CI or not
+# Default cloning value. It changes within CI
 GIT_URL_PREFIX="git@github.com:"
-if [ -z "${STRAP_CI+x}" ]; then
-  check_github_access
-else
-  GIT_URL_PREFIX="https://github.com/getsentry/"
-fi
+check_github_access
 
 [ "$USER" = "root" ] && abort "Run as yourself, not root."
 groups | grep $Q -E "\b(admin)\b" || abort "Add $USER to the admin group."
