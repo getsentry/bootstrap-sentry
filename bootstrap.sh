@@ -4,6 +4,17 @@
 #/ Heavily inspired by https://github.com/MikeMcQuaid/strap
 set -e
 
+# Default cloning value.
+GIT_URL_PREFIX="git@github.com:"
+
+if [ -n "$STRAP_CI" ]; then
+  CODE_ROOT="$HOME/code"
+  SKIP_METRICS=1
+  STRAP_DEBUG=1
+  GIT_URL_PREFIX="https://github.com/getsentry/"
+  SKIP_GETSENTRY=1
+fi
+
 bootstrap_sentry="$HOME/.sentry/bootstrap-sentry"
 mkdir -p "$bootstrap_sentry"
 cd "$bootstrap_sentry"
@@ -17,11 +28,6 @@ exec 2>&1
 STRAP_SUCCESS=""
 STRAP_ISSUES_URL='https://github.com/getsentry/bootstrap-sentry/issues/new'
 
-if [ -n "$STRAP_CI" ]; then
-  CODE_ROOT="$HOME/code"
-  SKIP_METRICS=1
-  # STRAP_DEBUG=1
-fi
 # NOTE: Now jump to "Beginning of execution" to skip over all these functions
 
 record_metric() {
@@ -50,10 +56,7 @@ check_github_access() {
   local github_message="Make sure that you set up your SSH keys correctly with Github. Read more in \
 https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/connecting-to-github-with-ssh"
 
-  # When running on CI we will clone from https
-  if [ -z "${STRAP_CI+x}" ]; then
-    GIT_URL_PREFIX="https://github.com/getsentry/"
-  elif ! [[ -d $HOME/.ssh ]]; then
+  if ! [[ -d $HOME/.ssh ]]; then
     echo >&2 "$github_message"
     exit 1
   fi
@@ -554,9 +557,7 @@ sudo_refresh
 # Before starting, get the user's code location root where we will clone sentry repos to
 get_code_root_path
 
-# Default cloning value. It changes within CI
-GIT_URL_PREFIX="git@github.com:"
-check_github_access
+[ -z "$STRAP_CI" ] && check_github_access
 
 [ "$USER" = "root" ] && abort "Run as yourself, not root."
 groups | grep $Q -E "\b(admin)\b" || abort "Add $USER to the admin group."
