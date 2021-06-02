@@ -17,6 +17,11 @@ exec 2>&1
 STRAP_SUCCESS=""
 STRAP_ISSUES_URL='https://github.com/getsentry/bootstrap-sentry/issues/new'
 
+if [ -n "$STRAP_CI" ]; then
+  CODE_ROOT="$HOME/code"
+  SKIP_METRICS=1
+  # STRAP_DEBUG=1
+fi
 # NOTE: Now jump to "Beginning of execution" to skip over all these functions
 
 record_metric() {
@@ -57,12 +62,14 @@ https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/
   resp=$(ssh -T git@github.com 2>&1 || true)
   regex="Hi (.*)! You've successfully authenticated, but GitHub does not provide shell access\."
 
-  if [[ "$resp" =~ $regex ]]; then
-    GITHUB_USER=${BASH_REMATCH[1]}
-  else
-    echo >&2 "$resp"
-    echo >&2 "$github_message"
-    exit 1
+  if [ -z "${STRAP_CI+x}" ]; then
+    if [[ "$resp" =~ $regex ]]; then
+      GITHUB_USER=${BASH_REMATCH[1]}
+    else
+      echo >&2 "$resp"
+      echo >&2 "$github_message"
+      exit 1
+    fi
   fi
 
   if [ -z "$GITHUB_USER" ]; then
@@ -168,7 +175,7 @@ BASH
 }
 
 sudo_refresh() {
-  # clear_debug
+  clear_debug
   if [ -n "$SUDO_ASKPASS" ]; then
     sudo --askpass --validate
   else
@@ -425,7 +432,7 @@ setup_pyenv() {
   if [ -f "$1/.python-version" ] && command -v pyenv &>/dev/null; then
     logn "Install python via pyenv"
     make setup-pyenv
-    eval "$(pyenv init -)"
+    eval "$(pyenv init --path)"
 
     # TODO make sure `python` is shimmed by pyenv e.g. = ~/.pyenv/shims/python
     logk
@@ -578,7 +585,9 @@ if [ -z "$SKIP_GETSENTRY" ] && ! git_clone_repo "getsentry/getsentry" "$GETSENTR
   SKIP_GETSENTRY=1
 fi
 
-install_brewfile "$SENTRY_ROOT"
+# Most of the following actions require to be within the Sentry checkout
+cd "$SENTRY_ROOT"
+# install_brewfile "$SENTRY_ROOT"
 start_docker
 setup_pyenv "$SENTRY_ROOT"
 install_volta

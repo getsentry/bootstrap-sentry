@@ -9,17 +9,12 @@ jobs:
   dev-env-cli:
     runs-on: macos-latest
     timeout-minutes: 20
-    # These variables remove all interactivity
     env:
-      CODE_ROOT: $HOME/code
-      SKIP_METRICS: 1
       STRAP_CI: 1
-      STRAP_DEBUG: 1
 
     steps:
       - uses: actions/checkout@v2
 
       - name: Execute bootstrap
         run: |
-          ls -l
           ./bootstrap.sh --debug
