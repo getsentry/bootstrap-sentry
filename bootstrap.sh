@@ -354,7 +354,7 @@ install_sentry_cli() {
 git_clone_repo() {
   if [ ! -d "$2" ]; then
     log "Cloning $1 to $2"
-    git clone "git@github.com:$1.git" "$2" || git clone "https://github.com/getsentry/$1.git" "$2"
+    git clone "${GIT_URL_PREFIX}$1.git" "$2"
     logk
   fi
 }
@@ -544,8 +544,13 @@ sudo_refresh
 # Before starting, get the user's code location root where we will clone sentry repos to
 get_code_root_path
 
-# This will allow the CI to skip this step
-[ -z "${STRAP_CI+x}" ] && check_github_access
+# Changes if we're executing within CI or not
+GIT_URL_PREFIX="git@github.com:"
+if [ -z "${STRAP_CI+x}" ]; then
+  check_github_access
+else
+  GIT_URL_PREFIX="https://github.com/getsentry/"
+fi
 
 [ "$USER" = "root" ] && abort "Run as yourself, not root."
 groups | grep $Q -E "\b(admin)\b" || abort "Add $USER to the admin group."
