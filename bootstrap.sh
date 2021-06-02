@@ -10,7 +10,6 @@ GIT_URL_PREFIX="git@github.com:"
 if [ -n "$STRAP_CI" ]; then
   CODE_ROOT="$HOME/code"
   SKIP_METRICS=1
-  STRAP_DEBUG=1
   GIT_URL_PREFIX="https://github.com/getsentry/"
   SKIP_GETSENTRY=1
 fi
@@ -65,14 +64,12 @@ https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/
   resp=$(ssh -T git@github.com 2>&1 || true)
   regex="Hi (.*)! You've successfully authenticated, but GitHub does not provide shell access\."
 
-  if [ -z "${STRAP_CI+x}" ]; then
-    if [[ "$resp" =~ $regex ]]; then
-      GITHUB_USER=${BASH_REMATCH[1]}
-    else
-      echo >&2 "$resp"
-      echo >&2 "$github_message"
-      exit 1
-    fi
+  if [[ "$resp" =~ $regex ]]; then
+    GITHUB_USER=${BASH_REMATCH[1]}
+  else
+    echo >&2 "$resp"
+    echo >&2 "$github_message"
+    exit 1
   fi
 
   if [ -z "$GITHUB_USER" ]; then
@@ -293,12 +290,12 @@ install_homebrew() {
   # Update Homebrew.
   export PATH="$HOMEBREW_PREFIX/bin:$PATH"
   log "Updating Homebrew:"
-  brew update
+  brew update -q
   logk
 
   # Install Homebrew Bundle, Cask and Services tap.
   log "Installing Homebrew taps and extensions:"
-  brew bundle --file=- <<RUBY
+  brew bundle -q --file=- <<RUBY
 tap 'homebrew/cask'
 tap 'homebrew/core'
 tap 'homebrew/services'
@@ -424,7 +421,7 @@ ensure_docker_server() {
 install_brewfile() {
   if [ -d "$1" ]; then
     log "Installing from sentry Brewfile"
-    cd "$1" && brew bundle
+    cd "$1" && brew bundle -q
     init_docker
     logk
   fi

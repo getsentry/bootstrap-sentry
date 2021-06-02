@@ -17,4 +17,4 @@ jobs:
 
       - name: Execute bootstrap
         run: |
-          ./bootstrap.sh --debug
+          ./bootstrap.sh
