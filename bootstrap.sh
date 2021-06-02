@@ -557,9 +557,13 @@ fi
 # Most of the following actions require to be within the Sentry checkout
 cd "$SENTRY_ROOT"
 # Use wip branch
-git checkout armenzg/sync-up-dev-env-workflow
+git checkout armenzg/more-robust-docker-initialization
 install_brewfile "$SENTRY_ROOT"
 setup_pyenv "$SENTRY_ROOT"
+python -V
+pyenv versions
+eval "$(pyenv init --path)"
+python -V
 install_volta
 install_direnv
 install_sentry_env_vars
