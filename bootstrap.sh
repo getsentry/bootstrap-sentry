@@ -13,6 +13,7 @@ if [ -n "$STRAP_CI" ]; then
   SKIP_METRICS=1
   GIT_URL_PREFIX="https://github.com/"
   SKIP_GETSENTRY=1
+  export SENTRY_DEVENV_NO_REPORT=1
 fi
 
 bootstrap_sentry="$HOME/.sentry/bootstrap-sentry"
@@ -555,9 +556,14 @@ fi
 
 # Most of the following actions require to be within the Sentry checkout
 cd "$SENTRY_ROOT"
+# Use wip branch
+git checkout armenzg/more-robust-docker-initialization
 install_brewfile "$SENTRY_ROOT"
-start_docker
 setup_pyenv "$SENTRY_ROOT"
+python -V
+pyenv versions
+eval "$(pyenv init --path)"
+python -V
 install_volta
 install_direnv
 install_sentry_env_vars
