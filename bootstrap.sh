@@ -11,7 +11,7 @@ if [ -n "$STRAP_CI" ]; then
   echo "Running within CI..."
   CODE_ROOT="$HOME/code"
   SKIP_METRICS=1
-  GIT_URL_PREFIX="https://github.com/getsentry/"
+  GIT_URL_PREFIX="https://github.com/"
   SKIP_GETSENTRY=1
 fi
 
