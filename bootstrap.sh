@@ -13,7 +13,9 @@ if [ -n "$STRAP_CI" ]; then
   SKIP_METRICS=1
   GIT_URL_PREFIX="https://github.com/"
   SKIP_GETSENTRY=1
-  export SENTRY_DEVENV_NO_REPORT=1
+else
+  # This is used to report issues when a new engineer encounters issues with this script
+  export SENTRY_DSN=https://b70e44882d494c68a78ea1e51c2b17f0@o1.ingest.sentry.io/5480435
 fi
 
 bootstrap_sentry="$HOME/.sentry/bootstrap-sentry"
@@ -358,8 +360,6 @@ install_sentry_cli() {
     logk
     eval "$(sentry-cli bash-hook)"
   fi
-  # Defining it outside of the block ensures that we get reports for 2nd time executions
-  export SENTRY_DSN=https://b70e44882d494c68a78ea1e51c2b17f0@o1.ingest.sentry.io/5480435
 }
 
 # Clone repo ($1) to path ($2)
