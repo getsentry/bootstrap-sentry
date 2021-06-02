@@ -13,6 +13,7 @@ if [ -n "$STRAP_CI" ]; then
   SKIP_METRICS=1
   GIT_URL_PREFIX="https://github.com/"
   SKIP_GETSENTRY=1
+  export SENTRY_DEVENV_NO_REPORT=1
 fi
 
 bootstrap_sentry="$HOME/.sentry/bootstrap-sentry"
@@ -365,7 +366,7 @@ install_sentry_cli() {
 git_clone_repo() {
   if [ ! -d "$2" ]; then
     log "Cloning $1 to $2"
-    git clone "${GIT_URL_PREFIX}$1.git" "$2"
+    git clone -q "${GIT_URL_PREFIX}$1.git" "$2"
     logk
   fi
 }
@@ -555,6 +556,8 @@ fi
 
 # Most of the following actions require to be within the Sentry checkout
 cd "$SENTRY_ROOT"
+# Use wip branch
+git checkout armenzg/sync-up-dev-env-workflow
 install_brewfile "$SENTRY_ROOT"
 setup_pyenv "$SENTRY_ROOT"
 install_volta
