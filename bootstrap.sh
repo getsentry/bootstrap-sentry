@@ -562,11 +562,17 @@ python -V
 pyenv versions
 eval "$(pyenv init --path)"
 python -V
+echo $PATH
 install_volta
 install_direnv
 install_sentry_env_vars
 
 cd "$SENTRY_ROOT"
+echo $PATH
+python -V
+eval "$(pyenv init --path)"
+echo $PATH
+pyenv versions
 python -V
 setup_virtualenv "$SENTRY_ROOT"
 
