@@ -8,7 +8,7 @@ on:
 jobs:
   dev-env-cli:
     runs-on: macos-latest
-    timeout-minutes: 20
+    timeout-minutes: 35
     env:
       STRAP_CI: 1
 
