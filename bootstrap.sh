@@ -568,6 +568,8 @@ install_volta
 install_direnv
 install_sentry_env_vars
 
+cd "$SENTRY_ROOT"
+python -V
 setup_virtualenv "$SENTRY_ROOT"
 
 # We need docker running before bootstrapping sentry
