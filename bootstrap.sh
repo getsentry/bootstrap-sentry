@@ -558,23 +558,12 @@ fi
 cd "$SENTRY_ROOT"
 install_brewfile "$SENTRY_ROOT"
 setup_pyenv "$SENTRY_ROOT"
-python -V
-pyenv versions
+# Run it here to make sure pyenv's Python is selected
 eval "$(pyenv init --path)"
-python -V
-echo $PATH
+setup_virtualenv "$SENTRY_ROOT"
 install_volta
 install_direnv
 install_sentry_env_vars
-
-cd "$SENTRY_ROOT"
-echo $PATH
-python -V
-eval "$(pyenv init --path)"
-echo $PATH
-pyenv versions
-python -V
-setup_virtualenv "$SENTRY_ROOT"
 
 # We need docker running before bootstrapping sentry
 ensure_docker_server
