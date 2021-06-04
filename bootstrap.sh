@@ -7,7 +7,7 @@ set -e
 # Default cloning value.
 GIT_URL_PREFIX="git@github.com:"
 
-if [ -n "$STRAP_CI" ]; then
+if [ -n "$CI" ]; then
   echo "Running within CI..."
   CODE_ROOT="$HOME/code"
   SKIP_METRICS=1
@@ -319,7 +319,7 @@ software_update() {
     if [ "$1" == "reminder" ]; then
       log "You have system updates to install. Please check for updates if you wish to install them."
       log $updates
-    elif [ -z "$STRAP_CI" ]; then
+    elif [ -z "$CI" ]; then
       log "Installing software updates:"
       sudo_askpass softwareupdate --install --all
       xcode_license
@@ -525,7 +525,7 @@ sudo_refresh
 # Before starting, get the user's code location root where we will clone sentry repos to
 get_code_root_path
 
-[ -z "$STRAP_CI" ] && check_github_access
+[ -z "$CI" ] && check_github_access
 
 [ "$USER" = "root" ] && abort "Run as yourself, not root."
 groups | grep $Q -E "\b(admin)\b" || abort "Add $USER to the admin group."
