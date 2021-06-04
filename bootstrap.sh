@@ -4,6 +4,20 @@
 #/ Heavily inspired by https://github.com/MikeMcQuaid/strap
 set -e
 
+# Default cloning value.
+GIT_URL_PREFIX="git@github.com:"
+
+if [ -n "$CI" ]; then
+  echo "Running within CI..."
+  CODE_ROOT="$HOME/code"
+  SKIP_METRICS=1
+  GIT_URL_PREFIX="https://github.com/"
+  SKIP_GETSENTRY=1
+else
+  # This is used to report issues when a new engineer encounters issues with this script
+  export SENTRY_DSN=https://b70e44882d494c68a78ea1e51c2b17f0@o1.ingest.sentry.io/5480435
+fi
+
 bootstrap_sentry="$HOME/.sentry/bootstrap-sentry"
 mkdir -p "$bootstrap_sentry"
 cd "$bootstrap_sentry"
@@ -280,12 +294,12 @@ install_homebrew() {
   # Update Homebrew.
   export PATH="$HOMEBREW_PREFIX/bin:$PATH"
   log "Updating Homebrew:"
-  brew update
+  brew update -q
   logk
 
   # Install Homebrew Bundle, Cask and Services tap.
   log "Installing Homebrew taps and extensions:"
-  brew bundle --file=- <<RUBY
+  brew bundle -q --file=- <<RUBY
 tap 'homebrew/cask'
 tap 'homebrew/core'
 tap 'homebrew/services'
@@ -296,14 +310,16 @@ RUBY
 # Check and install any remaining software updates.
 software_update() {
   logn "Checking for software updates:"
+  updates=$(softwareupdate -l 2>&1)
   # shellcheck disable=SC2086
-  if softwareupdate -l 2>&1 | grep $Q "No new software available."; then
+  if $updates | grep $Q "No new software available."; then
     logk
   else
     echo
     if [ "$1" == "reminder" ]; then
-      log "You have system updates to install. Please check for updates."
-    elif [ -z "$STRAP_CI" ]; then
+      log "You have system updates to install. Please check for updates if you wish to install them."
+      log $updates
+    elif [ -z "$CI" ]; then
       log "Installing software updates:"
       sudo_askpass softwareupdate --install --all
       xcode_license
@@ -344,46 +360,13 @@ install_sentry_cli() {
     logk
     eval "$(sentry-cli bash-hook)"
   fi
-  # Defining it outside of the block ensures that we get reports for 2nd time executions
-  export SENTRY_DSN=https://b70e44882d494c68a78ea1e51c2b17f0@o1.ingest.sentry.io/5480435
 }
 
 # Clone repo ($1) to path ($2)
 git_clone_repo() {
   if [ ! -d "$2" ]; then
     log "Cloning $1 to $2"
-    git clone "git@github.com:$1.git" "$2"
-    logk
-  fi
-}
-
-# After using homebrew to install docker, we need to do some magic to avoid user needing to interactive with GUI
-# See: https://github.com/docker/for-mac/issues/2359#issuecomment-607154849 for why we need to do things below
-init_docker() {
-  # Need to start docker if it was freshly installed (docker server is not running)
-  if ! command -v docker &>/dev/null && [ -d "/Applications/Docker.app" ]; then
-    log "Making some changes to complete Docker initialization"
-    # allow the app to run without confirmation
-    xattr -d -r com.apple.quarantine /Applications/Docker.app
-
-    # preemptively do docker.app's setup to avoid any gui prompts
-    sudo_askpass /bin/mkdir -p /Library/PrivilegedHelperTools
-    sudo_askpass /bin/chmod 754 /Library/PrivilegedHelperTools
-    sudo_askpass /bin/cp /Applications/Docker.app/Contents/Library/LaunchServices/com.docker.vmnetd /Library/PrivilegedHelperTools/
-    sudo_askpass /bin/cp /Applications/Docker.app/Contents/Resources/com.docker.vmnetd.plist /Library/LaunchDaemons/
-    sudo_askpass /bin/chmod 544 /Library/PrivilegedHelperTools/com.docker.vmnetd
-    sudo_askpass /bin/chmod 644 /Library/LaunchDaemons/com.docker.vmnetd.plist
-    sudo_askpass /bin/launchctl load /Library/LaunchDaemons/com.docker.vmnetd.plist
-    logk
-  fi
-}
-
-start_docker() {
-  if ! docker system info &>/dev/null; then
-    log "About to open Docker.app"
-    # At a later stage in the script, we're going to execute
-    # ensure_docker_server which waits for it to be ready
-    open -g -a Docker.app
+    git clone -q "${GIT_URL_PREFIX}$1.git" "$2"
     logk
   fi
 }
@@ -409,8 +392,8 @@ ensure_docker_server() {
 install_brewfile() {
   if [ -d "$1" ]; then
     log "Installing from sentry Brewfile"
-    cd "$1" && brew bundle
-    init_docker
+    cd "$1" && brew bundle -q
+    SENTRY_NO_VENV_CHECK=1 ./scripts/do.sh init-docker
     logk
   fi
 }
@@ -420,7 +403,7 @@ setup_pyenv() {
   if [ -f "$1/.python-version" ] && command -v pyenv &>/dev/null; then
     logn "Install python via pyenv"
     make setup-pyenv
-    eval "$(pyenv init -)"
+    eval "$(pyenv init --path)"
 
     # TODO make sure `python` is shimmed by pyenv e.g. = ~/.pyenv/shims/python
     logk
@@ -542,7 +525,7 @@ sudo_refresh
 # Before starting, get the user's code location root where we will clone sentry repos to
 get_code_root_path
 
-check_github_access
+[ -z "$CI" ] && check_github_access
 
 [ "$USER" = "root" ] && abort "Run as yourself, not root."
 groups | grep $Q -E "\b(admin)\b" || abort "Add $USER to the admin group."
@@ -571,14 +554,16 @@ if [ -z "$SKIP_GETSENTRY" ] && ! git_clone_repo "getsentry/getsentry" "$GETSENTR
   SKIP_GETSENTRY=1
 fi
 
+# Most of the following actions require to be within the Sentry checkout
+cd "$SENTRY_ROOT"
 install_brewfile "$SENTRY_ROOT"
-start_docker
 setup_pyenv "$SENTRY_ROOT"
+# Run it here to make sure pyenv's Python is selected
+eval "$(pyenv init --path)"
+setup_virtualenv "$SENTRY_ROOT"
 install_volta
 install_direnv
 install_sentry_env_vars
-
-setup_virtualenv "$SENTRY_ROOT"
 
 # We need docker running before bootstrapping sentry
 ensure_docker_server
