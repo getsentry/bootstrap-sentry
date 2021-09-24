@@ -5,34 +5,7 @@
 # shellcheck disable=SC2086
 set -e
 
-# Default cloning value.
-GIT_URL_PREFIX="git@github.com:"
-
-if [ -n "$CI" ]; then
-  echo "Running within CI..."
-  CODE_ROOT="$HOME/code"
-  SKIP_METRICS=1
-  GIT_URL_PREFIX="https://github.com/"
-  SKIP_GETSENTRY=1
-else
-  # This is used to report issues when a new engineer encounters issues with this script
-  export SENTRY_DSN=https://b70e44882d494c68a78ea1e51c2b17f0@o1.ingest.sentry.io/5480435
-fi
-
-bootstrap_sentry="$HOME/.sentry/bootstrap-sentry"
-mkdir -p "$bootstrap_sentry"
-cd "$bootstrap_sentry"
-
-# Keep a log. h/t https://stackoverflow.com/a/25319102
-cp bootstrap.log bootstrap.log.bak 2>/dev/null || true
-exec > >(tee bootstrap.log)
-exec 2>&1
-
-[[ "$1" = "--debug" || -o xtrace ]] && STRAP_DEBUG="1"
-STRAP_SUCCESS=""
-STRAP_ISSUES_URL='https://github.com/getsentry/bootstrap-sentry/issues/new'
-
-# NOTE: Now jump to "Beginning of execution" to skip over all these functions
+# NOTE: Jump to "Beginning of execution" to skip over all these functions
 
 record_metric() {
   if [ -n "$SKIP_METRICS" ]; then
@@ -425,8 +398,8 @@ ensure_docker_server() {
 install_brewfile() {
   if [ -d "$1" ]; then
     log "Installing from sentry Brewfile"
-    cd "$1" && brew bundle -q
-    SENTRY_NO_VENV_CHECK=1 ./scripts/do.sh init-docker
+    # This is useful when trying to run the script on a non-clean machine
+    (cd "$1" && brew bundle -q) || log "Something failed during brew bundle but let's try to continue"
     logk
   fi
 }
@@ -532,6 +505,8 @@ bootstrap() {
 ## Beginning of execution ##
 ############################
 
+trap "cleanup" EXIT
+
 OSNAME="$(uname -s)"
 # TODO: Support other OSes
 if [ "$OSNAME" != "Darwin" ]; then
@@ -539,7 +514,33 @@ if [ "$OSNAME" != "Darwin" ]; then
   exit 1
 fi
 
-trap "cleanup" EXIT
+# Default cloning value.
+GIT_URL_PREFIX="git@github.com:"
+
+if [ -n "$CI" ]; then
+  echo "Running within CI..."
+  CODE_ROOT="$HOME/code"
+  SKIP_METRICS=1
+  GIT_URL_PREFIX="https://github.com/"
+  SKIP_GETSENTRY=1
+else
+  # This is used to report issues when a new engineer encounters issues with this script
+  export SENTRY_DSN=https://b70e44882d494c68a78ea1e51c2b17f0@o1.ingest.sentry.io/5480435
+  install_sentry_cli
+fi
+
+bootstrap_sentry="$HOME/.sentry/bootstrap-sentry"
+mkdir -p "$bootstrap_sentry"
+cd "$bootstrap_sentry"
+
+# Keep a log. h/t https://stackoverflow.com/a/25319102
+cp bootstrap.log bootstrap.log.bak 2>/dev/null || true
+exec > >(tee bootstrap.log)
+exec 2>&1
+
+[[ "$1" = "--debug" || -o xtrace ]] && STRAP_DEBUG="1"
+STRAP_SUCCESS=""
+STRAP_ISSUES_URL='https://github.com/getsentry/bootstrap-sentry/issues/new'
 
 if [ -n "$STRAP_DEBUG" ]; then
   set -x
@@ -569,18 +570,17 @@ caffeinate -s -w $$ &
 install_xcode_cli
 xcode_license
 install_homebrew
+exit 0
+brew install --cask docker
+# We will open Docker on behalf of the user
+# This will allow the user to interact with Docker UI prompts
+# XXX: Add prompts to pause installation until user has dealth with it
+open -g -a Docker.app
 
 ### Sentry stuff ###
 SENTRY_ROOT="$CODE_ROOT/sentry"
 GETSENTRY_ROOT="$CODE_ROOT/getsentry"
 
-# TODO add env vars to ~/.sentryrc
-# This DSN is for our bootstrap script, not sure if we want it in profile
-# SENTRY_DSN=https://b70e44882d494c68a78ea1e51c2b17f0@o1.ingest.sentry.io/5480435
-# This will be used to measure webpack
-# SENTRY_INSTRUMENTATION=1
-
-install_sentry_cli
 git_clone_repo "getsentry/sentry" "$SENTRY_ROOT"
 if [ -z "$SKIP_GETSENTRY" ] && ! git_clone_repo "getsentry/getsentry" "$GETSENTRY_ROOT" 2>/dev/null; then
   # git clone failed, assume no access to getsentry and skip further getsentry steps
