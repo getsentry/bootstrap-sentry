@@ -381,6 +381,10 @@ git_clone_repo() {
 ensure_docker_server() {
   if [ -d "/Applications/Docker.app" ]; then
     log "Starting Docker.app, if necessary..."
+    # We will open Docker on behalf of the user
+    # This will allow the user to interact with Docker UI prompts
+    # XXX: Add prompts to pause installation until user has dealth with it
+    open -g -a Docker.app
 
     # taken from https://github.com/docker/for-mac/issues/2359#issuecomment-607154849
     # Wait for the server to start up, if applicable.
@@ -570,11 +574,6 @@ caffeinate -s -w $$ &
 install_xcode_cli
 xcode_license
 install_homebrew
-brew install --cask docker
-# We will open Docker on behalf of the user
-# This will allow the user to interact with Docker UI prompts
-# XXX: Add prompts to pause installation until user has dealth with it
-open -g -a Docker.app
 
 ### Sentry stuff ###
 SENTRY_ROOT="$CODE_ROOT/sentry"
