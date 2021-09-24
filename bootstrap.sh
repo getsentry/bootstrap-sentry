@@ -546,7 +546,6 @@ caffeinate -s -w $$ &
 install_xcode_cli
 xcode_license
 install_homebrew
-exit 0
 brew install --cask docker
 # We will open Docker on behalf of the user
 # This will allow the user to interact with Docker UI prompts
