@@ -357,6 +357,7 @@ git_clone_repo() {
 ensure_docker_server() {
   if [ -d "/Applications/Docker.app" ]; then
     log "Starting Docker.app, if necessary..."
+    log "We will not continue the installation until you have completed the UI prompts that Docker has."
     # We will open Docker on behalf of the user
     # This will allow the user to interact with Docker UI prompts
     # XXX: Add prompts to pause installation until user has dealth with it
