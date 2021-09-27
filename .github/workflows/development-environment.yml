@@ -6,39 +6,50 @@ on:
   pull_request:
 
 jobs:
-  dev-env-cli:
+  bootstrap-with-cache:
     runs-on: macos-latest
     timeout-minutes: 45
 
     steps:
       - uses: actions/checkout@v2
 
-      - name: Set variables for caches
-        id: info
-        run: |
-          echo "::set-output name=brew-cache-dir::$(brew --cache)"
-          echo "::set-output name=yarn-cache-dir::$(yarn cache dir)"
+      # - name: Set variables for caches
+      #   id: info
+      #   run: |
+      #     echo "::set-output name=brew-cache-dir::$(brew --cache)"
+      #     echo "::set-output name=yarn-cache-dir::$(yarn cache dir)"
 
-      - name: Cache (brew)
-        uses: actions/cache@v2
-        with:
-          path: ${{ steps.info.outputs.brew-cache-dir }}
-          key: devenv-${{ runner.os }}-brew-${{ hashFiles('Brewfile') }}
-          restore-keys: devenv-${{ runner.os }}-brew
+      # - name: Cache (brew)
+      #   uses: actions/cache@v2
+      #   with:
+      #     path: ${{ steps.info.outputs.brew-cache-dir }}
+      #     key: ${{ runner.os }}-brew-${{ hashFiles('Brewfile') }}
+      #     restore-keys: ${{ runner.os }}-brew
 
-      - name: Cache (pyenv)
-        uses: actions/cache@v2
-        with:
-          path: ~/.pyenv
-          key: devenv-${{ matrix.os }}-pyenv-${{ hashFiles('.python-version') }}
+      # - name: Cache (pyenv)
+      #   uses: actions/cache@v2
+      #   with:
+      #     path: ~/.pyenv
+      #     key: pyenv-${{ hashFiles('.python-version') }}
 
-      - name: Cache (yarn)
-        uses: actions/cache@v1 # We are explicitly using v1 due to perf reasons
-        with:
-          path: ${{ steps.info.outputs.yarn-cache-dir }}
-          key: devenv-${{ matrix.os }}-v2-yarn-${{ hashFiles('yarn.lock') }}
+      # - name: Cache (yarn)
+      #   uses: actions/cache@v1 # We are explicitly using v1 due to perf reasons
+      #   with:
+      #     path: ${{ steps.info.outputs.yarn-cache-dir }}
+      #     key: yarn-${{ hashFiles('yarn.lock') }}
 
       - name: Execute bootstrap
         run: |
-          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/uninstall.sh)"
           ./bootstrap.sh
+
+  # bootstrap-without-cache:
+  #   runs-on: macos-latest
+  #   timeout-minutes: 45
+
+  #   steps:
+  #     - uses: actions/checkout@v2
+
+  #     - name: Execute bootstrap
+  #       run: |
+  #         /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/uninstall.sh)"
+  #         ./bootstrap.sh
