@@ -33,7 +33,7 @@ exec 2>&1
 STRAP_SUCCESS=""
 STRAP_ISSUES_URL='https://github.com/getsentry/bootstrap-sentry/issues/new'
 
-# NOTE: Jump to "Beginning of execution" to skip over all these functions
+# NOTE: Now jump to "Beginning of execution" to skip over all these functions
 
 record_metric() {
   if [ -n "$SKIP_METRICS" ]; then
@@ -529,14 +529,14 @@ bootstrap() {
 ## Beginning of execution ##
 ############################
 
-trap "cleanup" EXIT
-
 OSNAME="$(uname -s)"
 # TODO: Support other OSes
 if [ "$OSNAME" != "Darwin" ]; then
   echo "'$OSNAME' not supported"
   exit 1
 fi
+
+trap "cleanup" EXIT
 
 if [ -n "$STRAP_DEBUG" ]; then
   set -x
@@ -565,8 +565,7 @@ caffeinate -s -w $$ &
 
 install_xcode_cli
 xcode_license
-# XXX: Temp change for local development
-# install_homebrew
+install_homebrew
 
 ### Sentry stuff ###
 SENTRY_ROOT="$CODE_ROOT/sentry"
