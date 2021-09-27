@@ -375,16 +375,16 @@ get_shell_startup_script() {
 # Install Sentry CLI so that we can track errors that happen in this bootstrap script
 # This requires xcode CLI to be installed
 install_sentry_cli() {
+  log "Installing sentry-cli"
+  if ! command -v sentry-cli &>/dev/null; then
+    curl -sL https://sentry.io/get-cli/ | bash
+  fi
   if [ -z "$CI" ]; then
-    if ! command -v sentry-cli &>/dev/null; then
-      log "Installing sentry-cli"
-      curl -sL https://sentry.io/get-cli/ | bash
-    fi
     # This is used to report issues when a new engineer encounters issues with this script
     export SENTRY_DSN=https://b70e44882d494c68a78ea1e51c2b17f0@o1.ingest.sentry.io/5480435
     eval "$(sentry-cli bash-hook)"
-    logk
   fi
+  logk
 }
 
 # Clone repo ($1) to path ($2)
