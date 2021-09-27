@@ -550,7 +550,8 @@ caffeinate -s -w $$ &
 
 install_xcode_cli
 xcode_license
-install_homebrew
+# XXX: Temp change for local development
+# install_homebrew
 
 ### Sentry stuff ###
 SENTRY_ROOT="$CODE_ROOT/sentry"
