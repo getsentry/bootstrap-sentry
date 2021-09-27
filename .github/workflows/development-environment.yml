@@ -13,6 +13,31 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Set variables for caches
+        id: info
+        run: |
+          echo "::set-output name=brew-cache-dir::$(brew --cache)"
+          echo "::set-output name=yarn-cache-dir::$(yarn cache dir)"
+
+      - name: Cache (brew)
+        uses: actions/cache@v2
+        with:
+          path: ${{ steps.info.outputs.brew-cache-dir }}
+          key: devenv-${{ runner.os }}-brew-${{ hashFiles('Brewfile') }}
+          restore-keys: devenv-${{ runner.os }}-brew
+
+      - name: Cache (pyenv)
+        uses: actions/cache@v2
+        with:
+          path: ~/.pyenv
+          key: devenv-${{ matrix.os }}-pyenv-${{ hashFiles('.python-version') }}
+
+      - name: Cache (yarn)
+        uses: actions/cache@v1 # We are explicitly using v1 due to perf reasons
+        with:
+          path: ${{ steps.info.outputs.yarn-cache-dir }}
+          key: devenv-${{ matrix.os }}-v2-yarn-${{ hashFiles('yarn.lock') }}
+
       - name: Execute bootstrap
         run: |
           /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/uninstall.sh)"
