@@ -14,9 +14,6 @@ if [ -n "$CI" ]; then
   SKIP_METRICS=1
   GIT_URL_PREFIX="https://github.com/"
   SKIP_GETSENTRY=1
-else
-  # This is used to report issues when a new engineer encounters issues with this script
-  export SENTRY_DSN=https://b70e44882d494c68a78ea1e51c2b17f0@o1.ingest.sentry.io/5480435
 fi
 
 bootstrap_sentry="$HOME/.sentry/bootstrap-sentry"
@@ -378,11 +375,15 @@ get_shell_startup_script() {
 # Install Sentry CLI so that we can track errors that happen in this bootstrap script
 # This requires xcode CLI to be installed
 install_sentry_cli() {
-  if ! command -v sentry-cli &>/dev/null; then
-    log "Installing sentry-cli"
-    curl -sL https://sentry.io/get-cli/ | bash
-    logk
+  if [ -z "$CI" ]; then
+    if ! command -v sentry-cli &>/dev/null; then
+      log "Installing sentry-cli"
+      curl -sL https://sentry.io/get-cli/ | bash
+    fi
+    # This is used to report issues when a new engineer encounters issues with this script
+    export SENTRY_DSN=https://b70e44882d494c68a78ea1e51c2b17f0@o1.ingest.sentry.io/5480435
     eval "$(sentry-cli bash-hook)"
+    logk
   fi
 }
 
