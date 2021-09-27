@@ -9,7 +9,6 @@ jobs:
   bootstrap:
     runs-on: macos-latest
     timeout-minutes: 45
-    name: "bootstrap"
     env:
       PIP_DISABLE_PIP_VERSION_CHECK: on
       # Make the environment more similar to what Mac defaults to
@@ -20,5 +19,4 @@ jobs:
 
       - name: Execute bootstrap
         run: |
-          sudo ./uninstall.sh
           ./bootstrap.sh
