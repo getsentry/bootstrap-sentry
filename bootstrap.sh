@@ -429,6 +429,9 @@ install_brewfile() {
 
 # Setup pyenv of path
 setup_pyenv() {
+  # XXX: temp
+  command -v pyenv
+  which pyenv
   if command -v pyenv &>/dev/null; then
     logn "Install python via pyenv"
     make setup-pyenv
