@@ -15,4 +15,5 @@ jobs:
 
       - name: Execute bootstrap
         run: |
+          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/uninstall.sh)"
           ./bootstrap.sh
