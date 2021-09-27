@@ -593,7 +593,8 @@ export PYENV_VERSION=$(
   get-pyenv-version
 )
 setup_virtualenv "$SENTRY_ROOT"
-install_volta
+# Currently failling in CI; fix at later time
+[ -z "$CI" ] && install_volta
 install_sentry_env_vars
 
 if [ -z "$CI" ]; then
