@@ -12,5 +12,5 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - run: |
-        pip install shellcheck-py==0.7.1
+        pip install shellcheck-py==0.7.2.1
         shellcheck *.sh
