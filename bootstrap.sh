@@ -597,10 +597,8 @@ setup_virtualenv "$SENTRY_ROOT"
 [ -z "$CI" ] && install_volta
 install_sentry_env_vars
 
-if [ -z "$CI" ]; then
-  # Sadly, there's not much left to test on Macs. Perhaps we can test on Linux
-  exit 0
-fi
+# Sadly, there's not much left to test on Macs. Perhaps, in the future, we can test on Linux
+[ -n "$CI" ] && exit 0
 
 # We need docker running before bootstrapping sentry
 ensure_docker_server
