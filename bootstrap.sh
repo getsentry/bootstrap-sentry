@@ -289,7 +289,7 @@ RUBY
 software_update() {
   logn "Checking for software updates:"
   updates=$(softwareupdate -l 2>&1)
-  if $updates | grep $Q "No new software available."; then
+  if echo "$updates" | grep "$Q" "No new software available."; then
     logk
   else
     echo
@@ -395,14 +395,14 @@ install_brewfile() {
   if [ -d "$1" ]; then
     log "Installing from sentry Brewfile"
     # This is useful when trying to run the script on a non-clean machine
-    (cd "$1" && brew bundle -q) || log "Something failed during brew bundle but let's try to continue"
+    (cd "$1" && brew bundle) || log "Something failed during brew bundle but let's try to continue"
     logk
   fi
 }
 
 # Setup pyenv of path
 setup_pyenv() {
-  if [ -f "$1/.python-version" ] && command -v pyenv &>/dev/null; then
+  if command -v pyenv &>/dev/null; then
     logn "Install python via pyenv"
     make setup-pyenv
     eval "$(pyenv init --path)"
@@ -580,20 +580,27 @@ fi
 
 # Most of the following actions require to be within the Sentry checkout
 cd "$SENTRY_ROOT"
-install_brewfile "$SENTRY_ROOT"
+# install_brewfile "$SENTRY_ROOT"
 setup_pyenv "$SENTRY_ROOT"
 # Run it here to make sure pyenv's Python is selected
 eval "$(pyenv init --path)"
+# shellcheck disable=SC2155
+export PYENV_VERSION=$(
+  source "${SENTRY_ROOT}/scripts/lib.sh"
+  get-pyenv-version
+)
 setup_virtualenv "$SENTRY_ROOT"
 install_volta
-install_direnv
 install_sentry_env_vars
 
 # We need docker running before bootstrapping sentry
-ensure_docker_server
+# ensure_docker_server
 
 # bootstrap sentry
 bootstrap "$SENTRY_ROOT"
+
+# Installing direnv after we boostrap to make sure our dev env does not depend on it
+install_direnv
 
 # bootstrap getsentry now
 if [ -z "$SKIP_GETSENTRY" ] && [ -d "$GETSENTRY_ROOT" ]; then
