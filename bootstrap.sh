@@ -229,30 +229,21 @@ xcode_license() {
 
 # Setup Homebrew directory and permissions.
 install_homebrew() {
-  # Setup Homebrew directory and permissions.
   logn "Installing Homebrew:"
   HOMEBREW_PREFIX="$(brew --prefix 2>/dev/null || true)"
-  HOMEBREW_REPOSITORY="$(brew --repository 2>/dev/null || true)"
-  if [ -z "$HOMEBREW_PREFIX" ] || [ -z "$HOMEBREW_REPOSITORY" ]; then
-    UNAME_MACHINE="$(/usr/bin/uname -m)"
-    if [[ "$UNAME_MACHINE" == "arm64" ]]; then
-      HOMEBREW_PREFIX="/opt/homebrew"
-      HOMEBREW_REPOSITORY="${HOMEBREW_PREFIX}"
-    else
-      HOMEBREW_PREFIX="/usr/local"
-      HOMEBREW_REPOSITORY="${HOMEBREW_PREFIX}/Homebrew"
-    fi
-  fi
+  [ -n "$HOMEBREW_PREFIX" ] || HOMEBREW_PREFIX="/usr/local"
   [ -d "$HOMEBREW_PREFIX" ] || sudo_askpass mkdir -p "$HOMEBREW_PREFIX"
   if [ "$HOMEBREW_PREFIX" = "/usr/local" ]; then
     sudo_askpass chown "root:wheel" "$HOMEBREW_PREFIX" 2>/dev/null || true
   fi
   (
     cd "$HOMEBREW_PREFIX"
-    sudo_askpass mkdir -p Cellar Caskroom Frameworks bin etc include lib opt sbin share var
-    sudo_askpass chown "$USER:admin" Cellar Caskroom Frameworks bin etc include lib opt sbin share var
+    sudo_askpass mkdir -p Cellar Frameworks bin etc include lib opt sbin share var
+    sudo_askpass chown -R "$USER:admin" Cellar Frameworks bin etc include lib opt sbin share var
   )
 
+  HOMEBREW_REPOSITORY="$(brew --repository 2>/dev/null || true)"
+  [ -n "$HOMEBREW_REPOSITORY" ] || HOMEBREW_REPOSITORY="/usr/local/Homebrew"
   [ -d "$HOMEBREW_REPOSITORY" ] || sudo_askpass mkdir -p "$HOMEBREW_REPOSITORY"
   sudo_askpass chown -R "$USER:admin" "$HOMEBREW_REPOSITORY"
 
@@ -272,8 +263,8 @@ install_homebrew() {
 
   # Update Homebrew.
   export PATH="$HOMEBREW_PREFIX/bin:$PATH"
-  logn "Updating Homebrew:"
-  brew update --quiet
+  log "Updating Homebrew:"
+  brew update -q
   logk
 
   # On Apple M1 machines we need to add this to the profile
@@ -286,10 +277,10 @@ install_homebrew() {
 
   # Install Homebrew Bundle, Cask and Services tap.
   log "Installing Homebrew taps and extensions:"
-  brew bundle --quiet --file=- <<RUBY
-tap "homebrew/cask"
-tap "homebrew/core"
-tap "homebrew/services"
+  brew bundle -q --file=- <<RUBY
+tap 'homebrew/cask'
+tap 'homebrew/core'
+tap 'homebrew/services'
 RUBY
   logk
 }
