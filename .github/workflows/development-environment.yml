@@ -6,47 +6,14 @@ on:
   pull_request:
 
 jobs:
-  fast-bootstrap:
+  bootstrap:
     runs-on: macos-latest
     timeout-minutes: 45
-    name: "Faster bootstrap"
-
-    steps:
-      - uses: actions/checkout@v2
-
-      # - name: Set variables for caches
-      #   id: info
-      #   run: |
-      #     echo "::set-output name=brew-cache-dir::$(brew --cache)"
-      #     echo "::set-output name=yarn-cache-dir::$(yarn cache dir)"
-
-      # - name: Cache (brew)
-      #   uses: actions/cache@v2
-      #   with:
-      #     path: ${{ steps.info.outputs.brew-cache-dir }}
-      #     key: ${{ runner.os }}-brew-${{ hashFiles('Brewfile') }}
-      #     restore-keys: ${{ runner.os }}-brew
-
-      # - name: Cache (pyenv)
-      #   uses: actions/cache@v2
-      #   with:
-      #     path: ~/.pyenv
-      #     key: pyenv-${{ hashFiles('.python-version') }}
-
-      # - name: Cache (yarn)
-      #   uses: actions/cache@v1 # We are explicitly using v1 due to perf reasons
-      #   with:
-      #     path: ${{ steps.info.outputs.yarn-cache-dir }}
-      #     key: yarn-${{ hashFiles('yarn.lock') }}
-
-      - name: Execute bootstrap
-        run: |
-          ./bootstrap.sh
-
-  slow-bootstrap:
-    runs-on: macos-latest
-    timeout-minutes: 45
-    name: "Full bootstrap"
+    name: "bootstrap"
+    env:
+      PIP_DISABLE_PIP_VERSION_CHECK: on
+      # Make the environment more similar to what Mac defaults to
+      SHELL: /bin/zsh
 
     steps:
       - uses: actions/checkout@v2
