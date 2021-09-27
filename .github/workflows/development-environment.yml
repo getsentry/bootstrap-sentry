@@ -20,5 +20,5 @@ jobs:
 
       - name: Execute bootstrap
         run: |
-          ./uninstall.sh
+          sudo ./uninstall.sh
           ./bootstrap.sh
