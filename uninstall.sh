@@ -4,3 +4,4 @@
 # as new laptops come in.
 # This can also be used in development to test executions of bootstrap.sh
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/uninstall.sh)"
+[ -f /usr/local/bin/chromedriver ] && rm /usr/local/bin/chromedriver
