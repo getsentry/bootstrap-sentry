@@ -6,9 +6,10 @@ on:
   pull_request:
 
 jobs:
-  bootstrap-with-cache:
+  fast-bootstrap:
     runs-on: macos-latest
     timeout-minutes: 45
+    name: "Faster bootstrap"
 
     steps:
       - uses: actions/checkout@v2
@@ -42,14 +43,15 @@ jobs:
         run: |
           ./bootstrap.sh
 
-  # bootstrap-without-cache:
-  #   runs-on: macos-latest
-  #   timeout-minutes: 45
+  slow-bootstrap:
+    runs-on: macos-latest
+    timeout-minutes: 45
+    name: "Full bootstrap"
 
-  #   steps:
-  #     - uses: actions/checkout@v2
+    steps:
+      - uses: actions/checkout@v2
 
-  #     - name: Execute bootstrap
-  #       run: |
-  #         /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/uninstall.sh)"
-  #         ./bootstrap.sh
+      - name: Execute bootstrap
+        run: |
+          ./uninstall.sh
+          ./bootstrap.sh

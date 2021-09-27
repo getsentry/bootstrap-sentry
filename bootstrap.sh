@@ -403,7 +403,6 @@ ensure_docker_server() {
     log "We will not continue the installation until you have completed the UI prompts that Docker has."
     # We will open Docker on behalf of the user
     # This will allow the user to interact with Docker UI prompts
-    # XXX: Add prompts to pause installation until user has dealth with it
     open -g -a Docker.app
 
     # taken from https://github.com/docker/for-mac/issues/2359#issuecomment-607154849
@@ -595,6 +594,11 @@ export PYENV_VERSION=$(
 setup_virtualenv "$SENTRY_ROOT"
 install_volta
 install_sentry_env_vars
+
+if [ -z "$CI" ]; then
+  # Sadly, there's not much left to test on Macs. Perhaps we can test on Linux
+  exit 0
+fi
 
 # We need docker running before bootstrapping sentry
 ensure_docker_server
