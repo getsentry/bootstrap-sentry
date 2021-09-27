@@ -5,15 +5,6 @@
 # shellcheck disable=SC2086
 set -e
 
-trap "cleanup" EXIT
-
-OSNAME="$(uname -s)"
-# TODO: Support other OSes
-if [ "$OSNAME" != "Darwin" ]; then
-  echo "'$OSNAME' not supported"
-  exit 1
-fi
-
 # Default cloning value.
 GIT_URL_PREFIX="git@github.com:"
 
@@ -537,6 +528,15 @@ bootstrap() {
 ############################
 ## Beginning of execution ##
 ############################
+
+trap "cleanup" EXIT
+
+OSNAME="$(uname -s)"
+# TODO: Support other OSes
+if [ "$OSNAME" != "Darwin" ]; then
+  echo "'$OSNAME' not supported"
+  exit 1
+fi
 
 if [ -n "$STRAP_DEBUG" ]; then
   set -x
