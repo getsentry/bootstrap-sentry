@@ -20,3 +20,8 @@ jobs:
       - name: Execute bootstrap
         run: |
           ./bootstrap.sh
+
+      # We can run a second time w/o anything breaking
+      - name: Second run
+        run: |
+          ./bootstrap.sh
