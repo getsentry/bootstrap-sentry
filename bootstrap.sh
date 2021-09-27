@@ -5,6 +5,43 @@
 # shellcheck disable=SC2086
 set -e
 
+trap "cleanup" EXIT
+
+OSNAME="$(uname -s)"
+# TODO: Support other OSes
+if [ "$OSNAME" != "Darwin" ]; then
+  echo "'$OSNAME' not supported"
+  exit 1
+fi
+
+# Default cloning value.
+GIT_URL_PREFIX="git@github.com:"
+
+if [ -n "$CI" ]; then
+  echo "Running within CI..."
+  CODE_ROOT="$HOME/code"
+  SKIP_METRICS=1
+  GIT_URL_PREFIX="https://github.com/"
+  SKIP_GETSENTRY=1
+else
+  # This is used to report issues when a new engineer encounters issues with this script
+  export SENTRY_DSN=https://b70e44882d494c68a78ea1e51c2b17f0@o1.ingest.sentry.io/5480435
+  install_sentry_cli
+fi
+
+bootstrap_sentry="$HOME/.sentry/bootstrap-sentry"
+mkdir -p "$bootstrap_sentry"
+cd "$bootstrap_sentry"
+
+# Keep a log. h/t https://stackoverflow.com/a/25319102
+cp bootstrap.log bootstrap.log.bak 2>/dev/null || true
+exec > >(tee bootstrap.log)
+exec 2>&1
+
+[[ "$1" = "--debug" || -o xtrace ]] && STRAP_DEBUG="1"
+STRAP_SUCCESS=""
+STRAP_ISSUES_URL='https://github.com/getsentry/bootstrap-sentry/issues/new'
+
 # NOTE: Jump to "Beginning of execution" to skip over all these functions
 
 record_metric() {
@@ -500,43 +537,6 @@ bootstrap() {
 ############################
 ## Beginning of execution ##
 ############################
-
-trap "cleanup" EXIT
-
-OSNAME="$(uname -s)"
-# TODO: Support other OSes
-if [ "$OSNAME" != "Darwin" ]; then
-  echo "'$OSNAME' not supported"
-  exit 1
-fi
-
-# Default cloning value.
-GIT_URL_PREFIX="git@github.com:"
-
-if [ -n "$CI" ]; then
-  echo "Running within CI..."
-  CODE_ROOT="$HOME/code"
-  SKIP_METRICS=1
-  GIT_URL_PREFIX="https://github.com/"
-  SKIP_GETSENTRY=1
-else
-  # This is used to report issues when a new engineer encounters issues with this script
-  export SENTRY_DSN=https://b70e44882d494c68a78ea1e51c2b17f0@o1.ingest.sentry.io/5480435
-  install_sentry_cli
-fi
-
-bootstrap_sentry="$HOME/.sentry/bootstrap-sentry"
-mkdir -p "$bootstrap_sentry"
-cd "$bootstrap_sentry"
-
-# Keep a log. h/t https://stackoverflow.com/a/25319102
-cp bootstrap.log bootstrap.log.bak 2>/dev/null || true
-exec > >(tee bootstrap.log)
-exec 2>&1
-
-[[ "$1" = "--debug" || -o xtrace ]] && STRAP_DEBUG="1"
-STRAP_SUCCESS=""
-STRAP_ISSUES_URL='https://github.com/getsentry/bootstrap-sentry/issues/new'
 
 if [ -n "$STRAP_DEBUG" ]; then
   set -x
