@@ -588,7 +588,7 @@ setup_pyenv "$SENTRY_ROOT"
 eval "$(pyenv init --path)"
 # shellcheck disable=SC2155
 export PYENV_VERSION=$(
-  # shellcheck disable=SC1091
+  # shellcheck disable=SC1090 disable=SC1091
   source "${SENTRY_ROOT}/scripts/lib.sh"
   get-pyenv-version
 )

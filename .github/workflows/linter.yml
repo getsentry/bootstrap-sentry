@@ -11,5 +11,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - name: Run ShellCheck
-      uses: ludeeus/action-shellcheck@f0d446b80e91cc0a7e8bec41ada75e2e73fd2218
+    - run: |
+        pip install shellcheck-py==0.7.1
+        shellcheck *.sh
