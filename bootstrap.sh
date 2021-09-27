@@ -579,7 +579,7 @@ fi
 
 # Most of the following actions require to be within the Sentry checkout
 cd "$SENTRY_ROOT"
-# install_brewfile "$SENTRY_ROOT"
+install_brewfile "$SENTRY_ROOT"
 setup_pyenv "$SENTRY_ROOT"
 # Run it here to make sure pyenv's Python is selected
 eval "$(pyenv init --path)"
@@ -593,7 +593,7 @@ install_volta
 install_sentry_env_vars
 
 # We need docker running before bootstrapping sentry
-# ensure_docker_server
+ensure_docker_server
 
 # bootstrap sentry
 bootstrap "$SENTRY_ROOT"
