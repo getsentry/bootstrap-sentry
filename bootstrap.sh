@@ -319,7 +319,7 @@ software_update() {
     echo
     if [ "$1" == "reminder" ]; then
       log "You have system updates to install. Please check for updates if you wish to install them."
-      log $updates
+      log "$updates"
     elif [ -z "$CI" ]; then
       log "Installing software updates:"
       sudo_askpass softwareupdate --install --all
@@ -588,6 +588,7 @@ setup_pyenv "$SENTRY_ROOT"
 eval "$(pyenv init --path)"
 # shellcheck disable=SC2155
 export PYENV_VERSION=$(
+  # shellcheck disable=SC1091
   source "${SENTRY_ROOT}/scripts/lib.sh"
   get-pyenv-version
 )
