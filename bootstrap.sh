@@ -303,6 +303,14 @@ install_homebrew() {
   brew update --quiet
   logk
 
+  # On Apple M1 machines we need to add this to the profile
+  if [[ "$(uname -m)" == "arm64" ]]; then
+    shell_profile=$(get_brew_profile)
+    #shellcheck disable=SC2016
+    echo 'eval "\$(${HOMEBREW_PREFIX}/bin/brew shellenv)"' >>${shell_profile}
+    eval "\$(${HOMEBREW_PREFIX}/bin/brew shellenv)"
+  fi
+
   # Install Homebrew Bundle, Cask and Services tap.
   log "Installing Homebrew taps and extensions:"
   brew bundle --quiet --file=- <<RUBY
@@ -344,6 +352,26 @@ get_shell_name() {
     echo "zsh"
     ;;
   esac
+}
+
+# From https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh
+get_brew_profile() {
+  case "${SHELL}" in
+  */bash*)
+    if [[ -r "${HOME}/.bash_profile" ]]; then
+      shell_profile="${HOME}/.bash_profile"
+    else
+      shell_profile="${HOME}/.profile"
+    fi
+    ;;
+  */zsh*)
+    shell_profile="${HOME}/.zprofile"
+    ;;
+  *)
+    shell_profile="${HOME}/.profile"
+    ;;
+  esac
+  echo $shell_profile
 }
 
 get_shell_startup_script() {
