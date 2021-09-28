@@ -4,10 +4,8 @@
 set -e
 
 # brew's uninstall script does not properly remove casks
-[ -d /Applications/Docker.app ] && (
-    command -v brew &>/dev/null && brew uninstall --cask docker
-    rm -rf /Applications/Docker.app
-)
+command -v brew &>/dev/null && brew uninstall --cask docker
+[ -d /Applications/Docker.app ] && rm -rf /Applications/Docker.app
 
 # Since we install pre-commit via brew, we need to restore the hooks
 [ -f .git/hooks/pre-commit ] && pre-commit uninstall
