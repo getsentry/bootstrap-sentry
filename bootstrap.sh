@@ -429,21 +429,16 @@ ensure_docker_server() {
 
 # Install Brewfile of dir ($1)
 install_brewfile() {
-  set -x
   if [ -d "$1" ]; then
     log "Installing from sentry Brewfile (very slow)"
     # This is useful when trying to run the script on a non-clean machine
     (cd "$1" && brew bundle) || log "Something failed during brew bundle but let's try to continue"
     logk
   fi
-  set +x
 }
 
 # Setup pyenv of path
 setup_pyenv() {
-  # XXX: temp
-  command -v pyenv
-  which pyenv
   if command -v pyenv &>/dev/null; then
     logn "Install python via pyenv"
     make setup-pyenv
@@ -617,6 +612,7 @@ ensure_docker_server
 
 # bootstrap sentry
 bootstrap "$SENTRY_ROOT"
+exit 1
 
 # Installing direnv after we boostrap to make sure our dev env does not depend on it
 install_direnv
