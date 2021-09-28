@@ -14,6 +14,8 @@ if [ -n "$CI" ]; then
   SKIP_METRICS=1
   GIT_URL_PREFIX="https://github.com/"
   SKIP_GETSENTRY=1
+  # The workflow sets the SHELL to zsh
+  touch "${HOME}/.zshrc"
 fi
 
 bootstrap_sentry="$HOME/.sentry/bootstrap-sentry"
