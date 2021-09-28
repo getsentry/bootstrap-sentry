@@ -251,9 +251,9 @@ xcode_license() {
   fi
 }
 
-# Setup Homebrew directory and permissions.
 install_homebrew() {
-  logn "Installing Homebrew:"
+  # Setup Homebrew directory and permissions.
+  logn "Installing Homebrew: (very slow)"
   HOMEBREW_PREFIX="$(brew --prefix 2>/dev/null || true)"
   [ -n "$HOMEBREW_PREFIX" ] || HOMEBREW_PREFIX="/usr/local"
   [ -d "$HOMEBREW_PREFIX" ] || sudo_askpass mkdir -p "$HOMEBREW_PREFIX"
@@ -419,12 +419,14 @@ ensure_docker_server() {
 
 # Install Brewfile of dir ($1)
 install_brewfile() {
+  set -x
   if [ -d "$1" ]; then
-    log "Installing from sentry Brewfile"
+    log "Installing from sentry Brewfile (very slow)"
     # This is useful when trying to run the script on a non-clean machine
     (cd "$1" && brew bundle) || log "Something failed during brew bundle but let's try to continue"
     logk
   fi
+  set +x
 }
 
 # Setup pyenv of path
