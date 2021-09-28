@@ -5,7 +5,7 @@ set -e
 
 # brew's uninstall script does not properly remove casks
 [ -d /Applications/Docker.app ] && (
-    command -v brew >/dev/null && brew uninstall --cask docker
+    command -v brew &>/dev/null && brew uninstall --cask docker
     rm -rf /Applications/Docker.app
 )
 
