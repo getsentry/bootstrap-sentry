@@ -1,14 +1,20 @@
 #!/bin/bash
 # This script removes brew and artifacts installed by it.
-# This can be used in development to before executions of bootstrap.sh
+# This is used in development before executions of bootstrap.sh
 set -e
+
+# brew's uninstall script does not properly remove casks
 [ -d /Applications/Docker.app ] && (
-    brew uninstall --cask docker
+    command -v brew && brew uninstall --cask docker
     rm -rf /Applications/Docker.app
 )
-# Since we install pre-commit via brew
+
+# Since we install pre-commit via brew, we need to restore the hooks
 [ -f .git/hooks/pre-commit ] && pre-commit uninstall
-# if command -v brew; then
-#     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/uninstall.sh)"
-# fi
+
+# Uninstall brew
+if command -v brew; then
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/uninstall.sh)"
+fi
+
 echo "Successfully uninstalled brew and related packages"
