@@ -306,9 +306,11 @@ install_homebrew() {
   # On Apple M1 machines we need to add this to the profile
   if [[ "$(uname -m)" == "arm64" ]]; then
     shell_profile=$(get_brew_profile)
-    #shellcheck disable=SC2016
-    echo 'eval "\$(${HOMEBREW_PREFIX}/bin/brew shellenv)"' >>${shell_profile}
-    eval "\$(${HOMEBREW_PREFIX}/bin/brew shellenv)"
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+    if ! grep -qF "brew shellenv" "${shell_profile}"; then
+      #shellcheck disable=SC2016
+      echo -e 'eval "$(/opt/homebrew/bin/brew shellenv)"' >>${shell_profile}
+    fi
   fi
 
   # Install Homebrew Bundle, Cask and Services tap.
