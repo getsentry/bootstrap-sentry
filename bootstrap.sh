@@ -614,7 +614,6 @@ ensure_docker_server
 
 # bootstrap sentry
 bootstrap "$SENTRY_ROOT"
-exit 1
 
 # Installing direnv after we boostrap to make sure our dev env does not depend on it
 install_direnv
