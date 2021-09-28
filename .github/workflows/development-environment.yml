@@ -7,7 +7,7 @@ on:
 
 jobs:
   bootstrap:
-    runs-on: macos-latest
+    runs-on: macos-11
     timeout-minutes: 45
     env:
       PIP_DISABLE_PIP_VERSION_CHECK: on
