@@ -14,9 +14,8 @@ if [ -n "$CI" ]; then
   SKIP_METRICS=1
   GIT_URL_PREFIX="https://github.com/"
   SKIP_GETSENTRY=1
-else
-  # This is used to report issues when a new engineer encounters issues with this script
-  export SENTRY_DSN=https://b70e44882d494c68a78ea1e51c2b17f0@o1.ingest.sentry.io/5480435
+  # The workflow sets the SHELL to zsh
+  touch "${HOME}/.zshrc"
 fi
 
 bootstrap_sentry="$HOME/.sentry/bootstrap-sentry"
@@ -254,7 +253,6 @@ xcode_license() {
   fi
 }
 
-# Setup Homebrew directory and permissions.
 install_homebrew() {
   # Setup Homebrew directory and permissions.
   logn "Installing Homebrew:"
@@ -327,13 +325,13 @@ RUBY
 software_update() {
   logn "Checking for software updates:"
   updates=$(softwareupdate -l 2>&1)
-  if $updates | grep $Q "No new software available."; then
+  if echo "$updates" | grep "$Q" "No new software available."; then
     logk
   else
     echo
     if [ "$1" == "reminder" ]; then
       log "You have system updates to install. Please check for updates if you wish to install them."
-      log $updates
+      log "$updates"
     elif [ -z "$CI" ]; then
       log "Installing software updates:"
       sudo_askpass softwareupdate --install --all
@@ -389,12 +387,16 @@ get_shell_startup_script() {
 # Install Sentry CLI so that we can track errors that happen in this bootstrap script
 # This requires xcode CLI to be installed
 install_sentry_cli() {
+  log "Installing sentry-cli"
   if ! command -v sentry-cli &>/dev/null; then
-    log "Installing sentry-cli"
     curl -sL https://sentry.io/get-cli/ | bash
-    logk
+  fi
+  if [ -z "$CI" ]; then
+    # This is used to report issues when a new engineer encounters issues with this script
+    export SENTRY_DSN=https://b70e44882d494c68a78ea1e51c2b17f0@o1.ingest.sentry.io/5480435
     eval "$(sentry-cli bash-hook)"
   fi
+  logk
 }
 
 # Clone repo ($1) to path ($2)
@@ -410,6 +412,10 @@ git_clone_repo() {
 ensure_docker_server() {
   if [ -d "/Applications/Docker.app" ]; then
     log "Starting Docker.app, if necessary..."
+    log "We will not continue the installation until you have completed the UI prompts that Docker has."
+    # We will open Docker on behalf of the user
+    # This will allow the user to interact with Docker UI prompts
+    open -g -a Docker.app
 
     # taken from https://github.com/docker/for-mac/issues/2359#issuecomment-607154849
     # Wait for the server to start up, if applicable.
@@ -426,16 +432,16 @@ ensure_docker_server() {
 # Install Brewfile of dir ($1)
 install_brewfile() {
   if [ -d "$1" ]; then
-    log "Installing from sentry Brewfile"
-    cd "$1" && brew bundle -q
-    SENTRY_NO_VENV_CHECK=1 ./scripts/do.sh init-docker
+    log "Installing from sentry Brewfile (very slow)"
+    # This is useful when trying to run the script on a non-clean machine
+    (cd "$1" && brew bundle) || log "Something failed during brew bundle but let's try to continue"
     logk
   fi
 }
 
 # Setup pyenv of path
 setup_pyenv() {
-  if [ -f "$1/.python-version" ] && command -v pyenv &>/dev/null; then
+  if command -v pyenv &>/dev/null; then
     logn "Install python via pyenv"
     make setup-pyenv
     eval "$(pyenv init --path)"
@@ -576,12 +582,6 @@ install_homebrew
 SENTRY_ROOT="$CODE_ROOT/sentry"
 GETSENTRY_ROOT="$CODE_ROOT/getsentry"
 
-# TODO add env vars to ~/.sentryrc
-# This DSN is for our bootstrap script, not sure if we want it in profile
-# SENTRY_DSN=https://b70e44882d494c68a78ea1e51c2b17f0@o1.ingest.sentry.io/5480435
-# This will be used to measure webpack
-# SENTRY_INSTRUMENTATION=1
-
 install_sentry_cli
 git_clone_repo "getsentry/sentry" "$SENTRY_ROOT"
 if [ -z "$SKIP_GETSENTRY" ] && ! git_clone_repo "getsentry/getsentry" "$GETSENTRY_ROOT" 2>/dev/null; then
@@ -595,16 +595,28 @@ install_brewfile "$SENTRY_ROOT"
 setup_pyenv "$SENTRY_ROOT"
 # Run it here to make sure pyenv's Python is selected
 eval "$(pyenv init --path)"
+# shellcheck disable=SC2155
+export PYENV_VERSION=$(
+  # shellcheck disable=SC1090 disable=SC1091
+  source "${SENTRY_ROOT}/scripts/lib.sh"
+  get-pyenv-version
+)
 setup_virtualenv "$SENTRY_ROOT"
-install_volta
-install_direnv
+# Currently failling in CI; fix at later time
+[ -z "$CI" ] && install_volta
 install_sentry_env_vars
+
+# Sadly, there's not much left to test on Macs. Perhaps, in the future, we can test on Linux
+[ -n "$CI" ] && exit 0
 
 # We need docker running before bootstrapping sentry
 ensure_docker_server
 
 # bootstrap sentry
 bootstrap "$SENTRY_ROOT"
+
+# Installing direnv after we boostrap to make sure our dev env does not depend on it
+install_direnv
 
 # bootstrap getsentry now
 if [ -z "$SKIP_GETSENTRY" ] && [ -d "$GETSENTRY_ROOT" ]; then

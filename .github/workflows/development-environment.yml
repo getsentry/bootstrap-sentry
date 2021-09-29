@@ -6,13 +6,22 @@ on:
   pull_request:
 
 jobs:
-  dev-env-cli:
-    runs-on: macos-latest
+  bootstrap:
+    runs-on: macos-11
     timeout-minutes: 45
+    env:
+      PIP_DISABLE_PIP_VERSION_CHECK: on
+      # Make the environment more similar to what Mac defaults to
+      SHELL: /bin/zsh
 
     steps:
       - uses: actions/checkout@v2
 
       - name: Execute bootstrap
+        run: |
+          ./bootstrap.sh
+
+      # We can run a second time w/o anything breaking
+      - name: Second run
         run: |
           ./bootstrap.sh
