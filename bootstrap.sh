@@ -253,6 +253,7 @@ xcode_license() {
   fi
 }
 
+# Based on https://github.com/MikeMcQuaid/strap/blob/3453fb84f945131c21473c05c93249513ec9388a/bin/strap.sh#L274-L330
 install_homebrew() {
   # Setup Homebrew directory and permissions.
   logn "Installing Homebrew:"
@@ -298,12 +299,13 @@ install_homebrew() {
   # Update Homebrew.
   export PATH="$HOMEBREW_PREFIX/bin:$PATH"
   logn "Updating Homebrew:"
-  [ -z "$QUICK" ] && brew update --quiet
+  [ -z "$QUICK" ] && brew update
   logk
 
   # On Apple M1 machines we need to add this to the profile
   if [[ "$(uname -m)" == "arm64" ]]; then
     shell_profile=$(get_brew_profile)
+    [ ! -f "${shell_profile}" ] && touch "${shell_profile}"
     eval "$(/opt/homebrew/bin/brew shellenv)"
     if ! grep -qF "brew shellenv" "${shell_profile}"; then
       #shellcheck disable=SC2016
@@ -588,7 +590,7 @@ caffeinate -s -w $$ &
 
 install_xcode_cli
 xcode_license
-[ -z "$QUICK" ] && install_homebrew
+! command -v brew &>/dev/null && install_homebrew
 
 ### Sentry stuff ###
 SENTRY_ROOT="$CODE_ROOT/sentry"
