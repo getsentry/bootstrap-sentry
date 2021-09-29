@@ -2,6 +2,7 @@
 #/ Usage: bin/strap.sh [--debug]
 #/ Install development dependencies on macOS.
 #/ Heavily inspired by https://github.com/MikeMcQuaid/strap
+# shellcheck disable=SC2086
 set -e
 
 # Default cloning value.
@@ -242,7 +243,6 @@ install_xcode_cli() {
 
 # Check if the Xcode license is agreed to and agree if not.
 xcode_license() {
-  # shellcheck disable=SC2086
   if /usr/bin/xcrun clang 2>&1 | grep $Q license; then
     if [ -n "$STRAP_INTERACTIVE" ]; then
       logn "Asking for Xcode license confirmation:"
@@ -256,21 +256,30 @@ xcode_license() {
 
 # Setup Homebrew directory and permissions.
 install_homebrew() {
+  # Setup Homebrew directory and permissions.
   logn "Installing Homebrew:"
   HOMEBREW_PREFIX="$(brew --prefix 2>/dev/null || true)"
-  [ -n "$HOMEBREW_PREFIX" ] || HOMEBREW_PREFIX="/usr/local"
+  HOMEBREW_REPOSITORY="$(brew --repository 2>/dev/null || true)"
+  if [ -z "$HOMEBREW_PREFIX" ] || [ -z "$HOMEBREW_REPOSITORY" ]; then
+    UNAME_MACHINE="$(/usr/bin/uname -m)"
+    if [[ "$UNAME_MACHINE" == "arm64" ]]; then
+      HOMEBREW_PREFIX="/opt/homebrew"
+      HOMEBREW_REPOSITORY="${HOMEBREW_PREFIX}"
+    else
+      HOMEBREW_PREFIX="/usr/local"
+      HOMEBREW_REPOSITORY="${HOMEBREW_PREFIX}/Homebrew"
+    fi
+  fi
   [ -d "$HOMEBREW_PREFIX" ] || sudo_askpass mkdir -p "$HOMEBREW_PREFIX"
   if [ "$HOMEBREW_PREFIX" = "/usr/local" ]; then
     sudo_askpass chown "root:wheel" "$HOMEBREW_PREFIX" 2>/dev/null || true
   fi
   (
     cd "$HOMEBREW_PREFIX"
-    sudo_askpass mkdir -p Cellar Frameworks bin etc include lib opt sbin share var
-    sudo_askpass chown -R "$USER:admin" Cellar Frameworks bin etc include lib opt sbin share var
+    sudo_askpass mkdir -p Cellar Caskroom Frameworks bin etc include lib opt sbin share var
+    sudo_askpass chown "$USER:admin" Cellar Caskroom Frameworks bin etc include lib opt sbin share var
   )
 
-  HOMEBREW_REPOSITORY="$(brew --repository 2>/dev/null || true)"
-  [ -n "$HOMEBREW_REPOSITORY" ] || HOMEBREW_REPOSITORY="/usr/local/Homebrew"
   [ -d "$HOMEBREW_REPOSITORY" ] || sudo_askpass mkdir -p "$HOMEBREW_REPOSITORY"
   sudo_askpass chown -R "$USER:admin" "$HOMEBREW_REPOSITORY"
 
@@ -280,29 +289,36 @@ install_homebrew() {
 
   # Download Homebrew.
   export GIT_DIR="$HOMEBREW_REPOSITORY/.git" GIT_WORK_TREE="$HOMEBREW_REPOSITORY"
-  # shellcheck disable=SC2086
   git init $Q
   git config remote.origin.url "https://github.com/Homebrew/brew"
   git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*"
-  # shellcheck disable=SC2086
   git fetch $Q --tags --force
-  # shellcheck disable=SC2086
   git reset $Q --hard origin/master
   unset GIT_DIR GIT_WORK_TREE
   logk
 
   # Update Homebrew.
   export PATH="$HOMEBREW_PREFIX/bin:$PATH"
-  log "Updating Homebrew:"
-  brew update -q
+  logn "Updating Homebrew:"
+  brew update --quiet
   logk
+
+  # On Apple M1 machines we need to add this to the profile
+  if [[ "$(uname -m)" == "arm64" ]]; then
+    shell_profile=$(get_brew_profile)
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+    if ! grep -qF "brew shellenv" "${shell_profile}"; then
+      #shellcheck disable=SC2016
+      echo -e 'eval "$(/opt/homebrew/bin/brew shellenv)"' >>${shell_profile}
+    fi
+  fi
 
   # Install Homebrew Bundle, Cask and Services tap.
   log "Installing Homebrew taps and extensions:"
-  brew bundle -q --file=- <<RUBY
-tap 'homebrew/cask'
-tap 'homebrew/core'
-tap 'homebrew/services'
+  brew bundle --quiet --file=- <<RUBY
+tap "homebrew/cask"
+tap "homebrew/core"
+tap "homebrew/services"
 RUBY
   logk
 }
@@ -311,7 +327,6 @@ RUBY
 software_update() {
   logn "Checking for software updates:"
   updates=$(softwareupdate -l 2>&1)
-  # shellcheck disable=SC2086
   if $updates | grep $Q "No new software available."; then
     logk
   else
@@ -339,6 +354,26 @@ get_shell_name() {
     echo "zsh"
     ;;
   esac
+}
+
+# From https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh
+get_brew_profile() {
+  case "${SHELL}" in
+  */bash*)
+    if [[ -r "${HOME}/.bash_profile" ]]; then
+      shell_profile="${HOME}/.bash_profile"
+    else
+      shell_profile="${HOME}/.profile"
+    fi
+    ;;
+  */zsh*)
+    shell_profile="${HOME}/.zprofile"
+    ;;
+  *)
+    shell_profile="${HOME}/.profile"
+    ;;
+  esac
+  echo $shell_profile
 }
 
 get_shell_startup_script() {
