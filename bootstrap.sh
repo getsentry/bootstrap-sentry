@@ -429,12 +429,12 @@ ensure_docker_server() {
   fi
 }
 
-# Install Brewfile of dir ($1)
-install_brewfile() {
+# Install required libraries of dir ($1)
+install_prerequisites() {
   if [ -d "$1" ]; then
     log "Installing from sentry Brewfile (very slow)"
     # This is useful when trying to run the script on a non-clean machine
-    (cd "$1" && brew bundle) || log "Something failed during brew bundle but let's try to continue"
+    (cd "$1" && make prerequisites) || log "Something failed during brew bundle but let's try to continue"
     logk
   fi
 }
@@ -540,6 +540,8 @@ bootstrap() {
 ## Beginning of execution ##
 ############################
 
+install_sentry_cli
+
 OSNAME="$(uname -s)"
 # TODO: Support other OSes
 if [ "$OSNAME" != "Darwin" ]; then
@@ -582,7 +584,6 @@ install_homebrew
 SENTRY_ROOT="$CODE_ROOT/sentry"
 GETSENTRY_ROOT="$CODE_ROOT/getsentry"
 
-install_sentry_cli
 git_clone_repo "getsentry/sentry" "$SENTRY_ROOT"
 if [ -z "$SKIP_GETSENTRY" ] && ! git_clone_repo "getsentry/getsentry" "$GETSENTRY_ROOT" 2>/dev/null; then
   # git clone failed, assume no access to getsentry and skip further getsentry steps
@@ -591,7 +592,7 @@ fi
 
 # Most of the following actions require to be within the Sentry checkout
 cd "$SENTRY_ROOT"
-install_brewfile "$SENTRY_ROOT"
+install_prerequisites "$SENTRY_ROOT"
 setup_pyenv "$SENTRY_ROOT"
 # Run it here to make sure pyenv's Python is selected
 eval "$(pyenv init --path)"
@@ -602,12 +603,12 @@ export PYENV_VERSION=$(
   get-pyenv-version
 )
 setup_virtualenv "$SENTRY_ROOT"
-# Currently failling in CI; fix at later time
-[ -z "$CI" ] && install_volta
 install_sentry_env_vars
 
 # Sadly, there's not much left to test on Macs. Perhaps, in the future, we can test on Linux
 [ -n "$CI" ] && exit 0
+
+install_volta
 
 # We need docker running before bootstrapping sentry
 ensure_docker_server
