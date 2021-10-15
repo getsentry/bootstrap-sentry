@@ -8,7 +8,9 @@ set -e
 
 # Remove Sentry and dependencies
 rm -rf ~/.sentry
-rm -rf ~/code/sentry ~/code/getsentry
+rm -rf ~/code/sentry/{.venv,node_modules}
+rm -rf ~/code/getsentry/{.venv,node_modules}
+[ -f ~/.zprofile ] && rm ~/.zprofile
 
 remove_brew_setup() {
     # Removes all packages

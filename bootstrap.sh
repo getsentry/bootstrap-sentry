@@ -298,7 +298,7 @@ install_homebrew() {
   # Update Homebrew.
   export PATH="$HOMEBREW_PREFIX/bin:$PATH"
   logn "Updating Homebrew:"
-  brew update --quiet
+  [ -z "$QUICK" ] && brew update --quiet
   logk
 
   # On Apple M1 machines we need to add this to the profile
@@ -433,8 +433,14 @@ ensure_docker_server() {
 install_prerequisites() {
   if [ -d "$1" ]; then
     log "Installing from sentry Brewfile (very slow)"
-    # This is useful when trying to run the script on a non-clean machine
-    (cd "$1" && make prerequisites) || log "Something failed during brew bundle but let's try to continue"
+    if [ -z "$QUICK" ]; then
+      # The fallback is useful when trying to run the script on a non-clean machine multiple times
+      cd "$1" && (make prerequisites || log "Something failed during brew bundle but let's try to continue")
+    else
+      export HOMEBREW_NO_AUTO_UPDATE=on
+      brew install libxmlsec1 direnv
+      brew install --cask docker
+    fi
     logk
   fi
 }
