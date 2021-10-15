@@ -1,10 +1,9 @@
 #!/bin/bash
+# WARNING: You take full resposibility of what could happen to your host when executing
+#          this script. This script has only been tested on Armen's MBP arm64 machine
+#
 # This script tries to remove as much as reasonable to allow for re-testing
 # bootstrap.sh multiple times on the same host
-set -e
-
-# Since we install pre-commit via brew, we need to restore the hooks
-[ -f .git/hooks/pre-commit ] && command -v pre-commit &>/dev/null && pre-commit uninstall
 
 # Remove Sentry and dependencies
 rm -rf ~/.sentry
@@ -17,7 +16,7 @@ remove_brew_setup() {
     brew list -1 | xargs brew rm
     # brew's uninstall script does not remove some things
     [ -d /Applications/Docker.app ] && rm -rf /Applications/Docker.app
-    [ -f /opt/homebrew/bin/chromedriver ] && rm /opt/homebrew/bin/chromedriver
+    # Execute the official uninstall command
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/uninstall.sh)"
     # This is not removed by the script.
     # On Intel machines, I would not dare removing /usr/local
