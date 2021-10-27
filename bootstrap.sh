@@ -404,6 +404,8 @@ git_clone_repo() {
   if [ ! -d "$2" ]; then
     log "Cloning $1 to $2"
     git clone -q "${GIT_URL_PREFIX}$1.git" "$2"
+    # XXX: Temporarily
+    git checkout armenzg/dev/add-python-version-back
     logk
   fi
 }
@@ -603,9 +605,6 @@ fi
 cd "$SENTRY_ROOT"
 install_prerequisites "$SENTRY_ROOT"
 setup_pyenv "$SENTRY_ROOT"
-set -x
-pyenv versions
-echo "$PATH"
 # Run it here to make sure pyenv's Python is selected
 eval "$(pyenv init --path)"
 setup_virtualenv "$SENTRY_ROOT"
