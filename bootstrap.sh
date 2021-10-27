@@ -405,7 +405,7 @@ git_clone_repo() {
     log "Cloning $1 to $2"
     git clone -q "${GIT_URL_PREFIX}$1.git" "$2"
     # XXX: Temporarily
-    git checkout armenzg/dev/add-python-version-back
+    cd "$2" && git checkout armenzg/dev/add-python-version-back
     logk
   fi
 }
