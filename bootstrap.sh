@@ -612,7 +612,7 @@ setup_virtualenv "$SENTRY_ROOT"
 install_sentry_env_vars
 
 # Sadly, there's not much left to test on Macs. Perhaps, in the future, we can test on Linux
-[ -n "$CI" ] && exit 0
+[ -n "$CI" ] && STRAP_SUCCESS=1 && exit 0
 
 install_volta
 

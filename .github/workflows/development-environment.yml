@@ -27,11 +27,6 @@ jobs:
         run: |
           ./bootstrap.sh
 
-      # We can run a second time w/o anything breaking
-      - name: Second run
-        run: |
-          ./bootstrap.sh
-
   slow-bootstrap:
     runs-on: macos-11
     timeout-minutes: 45
@@ -49,7 +44,8 @@ jobs:
         run: |
           ./bootstrap.sh
 
-      # We can run a second time w/o anything breaking
+      # This is import for assuring engineers that they can run the code once
+      # again if something where to fail
       - name: Second run
         run: |
           ./bootstrap.sh
