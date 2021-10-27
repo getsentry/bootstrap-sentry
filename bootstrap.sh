@@ -434,14 +434,15 @@ ensure_docker_server() {
 # Install required libraries of dir ($1)
 install_prerequisites() {
   if [ -d "$1" ]; then
-    log "Installing from sentry Brewfile (very slow)"
     if [ -z "$QUICK" ]; then
+      log "Installing from sentry Brewfile (very slow)"
       # This makes sure that we don't try to install Python packages from the cache
       # This is useful when verifying a new platform and multiple executions of bootstrap.sh is required
       export PIP_NO_CACHE_DIR=on
       # The fallback is useful when trying to run the script on a non-clean machine multiple times
       cd "$1" && (make prerequisites || log "Something failed during brew bundle but let's try to continue")
     else
+      log "Installing minimal set of requirements"
       export HOMEBREW_NO_AUTO_UPDATE=on
       brew install libxmlsec1 pyenv
       brew install --cask docker
