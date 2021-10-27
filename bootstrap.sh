@@ -577,7 +577,7 @@ sudo_refresh
 # Before starting, get the user's code location root where we will clone sentry repos to
 get_code_root_path
 
-[ -z "$CI" ] && check_github_access
+[ -z "$CI" ] && [ -z "$QUICK" ] && check_github_access
 
 [ "$USER" = "root" ] && abort "Run as yourself, not root."
 groups | grep $Q -E "\b(admin)\b" || abort "Add $USER to the admin group."
@@ -587,7 +587,7 @@ caffeinate -s -w $$ &
 
 install_xcode_cli
 xcode_license
-install_homebrew
+[ -z "$QUICK" ] && install_homebrew
 
 ### Sentry stuff ###
 SENTRY_ROOT="$CODE_ROOT/sentry"
@@ -601,16 +601,10 @@ fi
 
 # Most of the following actions require to be within the Sentry checkout
 cd "$SENTRY_ROOT"
-install_prerequisites "$SENTRY_ROOT"
+[ -z "$QUICK" ] && install_prerequisites "$SENTRY_ROOT"
 setup_pyenv "$SENTRY_ROOT"
 # Run it here to make sure pyenv's Python is selected
 eval "$(pyenv init --path)"
-# shellcheck disable=SC2155
-export PYENV_VERSION=$(
-  # shellcheck disable=SC1090 disable=SC1091
-  source "${SENTRY_ROOT}/scripts/lib.sh"
-  get-pyenv-version
-)
 setup_virtualenv "$SENTRY_ROOT"
 install_sentry_env_vars
 
