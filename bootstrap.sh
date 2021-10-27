@@ -601,7 +601,7 @@ fi
 
 # Most of the following actions require to be within the Sentry checkout
 cd "$SENTRY_ROOT"
-[ -z "$QUICK" ] && install_prerequisites "$SENTRY_ROOT"
+install_prerequisites "$SENTRY_ROOT"
 setup_pyenv "$SENTRY_ROOT"
 set -x
 pyenv versions

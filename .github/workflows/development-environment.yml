@@ -20,6 +20,9 @@ jobs:
       - name: Execute bootstrap
         env:
           STRAP_DEBUG: 1
+          # This enables iterating faster in the CI:
+          # - Only install required libraries rather than brew bundle
+          # - Skip updating Homebrew
           QUICK: 1
         run: |
           ./bootstrap.sh
