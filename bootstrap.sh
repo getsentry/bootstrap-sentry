@@ -603,6 +603,9 @@ fi
 cd "$SENTRY_ROOT"
 [ -z "$QUICK" ] && install_prerequisites "$SENTRY_ROOT"
 setup_pyenv "$SENTRY_ROOT"
+set -x
+pyenv versions
+echo "$PATH"
 # Run it here to make sure pyenv's Python is selected
 eval "$(pyenv init --path)"
 setup_virtualenv "$SENTRY_ROOT"
