@@ -432,14 +432,15 @@ ensure_docker_server() {
 # Install required libraries of dir ($1)
 install_prerequisites() {
   if [ -d "$1" ]; then
-    log "Installing from sentry Brewfile (very slow)"
     if [ -z "$QUICK" ]; then
+      log "Installing from sentry Brewfile (very slow)"
       # This makes sure that we don't try to install Python packages from the cache
       # This is useful when verifying a new platform and multiple executions of bootstrap.sh is required
       export PIP_NO_CACHE_DIR=on
       # The fallback is useful when trying to run the script on a non-clean machine multiple times
       cd "$1" && (make prerequisites || log "Something failed during brew bundle but let's try to continue")
     else
+      log "Installing minimal set of requirements"
       export HOMEBREW_NO_AUTO_UPDATE=on
       brew install libxmlsec1 pyenv
       brew install --cask docker
@@ -577,7 +578,7 @@ sudo_refresh
 # Before starting, get the user's code location root where we will clone sentry repos to
 get_code_root_path
 
-[ -z "$CI" ] && check_github_access
+[ -z "$CI" ] && [ -z "$QUICK" ] && check_github_access
 
 [ "$USER" = "root" ] && abort "Run as yourself, not root."
 groups | grep $Q -E "\b(admin)\b" || abort "Add $USER to the admin group."
@@ -587,7 +588,7 @@ caffeinate -s -w $$ &
 
 install_xcode_cli
 xcode_license
-install_homebrew
+[ -z "$QUICK" ] && install_homebrew
 
 ### Sentry stuff ###
 SENTRY_ROOT="$CODE_ROOT/sentry"
@@ -605,17 +606,11 @@ install_prerequisites "$SENTRY_ROOT"
 setup_pyenv "$SENTRY_ROOT"
 # Run it here to make sure pyenv's Python is selected
 eval "$(pyenv init --path)"
-# shellcheck disable=SC2155
-export PYENV_VERSION=$(
-  # shellcheck disable=SC1090 disable=SC1091
-  source "${SENTRY_ROOT}/scripts/lib.sh"
-  get-pyenv-version
-)
 setup_virtualenv "$SENTRY_ROOT"
 install_sentry_env_vars
 
 # Sadly, there's not much left to test on Macs. Perhaps, in the future, we can test on Linux
-[ -n "$CI" ] && exit 0
+[ -n "$CI" ] && STRAP_SUCCESS=1 && exit 0
 
 install_volta
 
