@@ -552,8 +552,6 @@ bootstrap() {
 ## Beginning of execution ##
 ############################
 
-install_sentry_cli
-
 OSNAME="$(uname -s)"
 # TODO: Support other OSes
 if [ "$OSNAME" != "Darwin" ]; then
@@ -596,6 +594,7 @@ xcode_license
 SENTRY_ROOT="$CODE_ROOT/sentry"
 GETSENTRY_ROOT="$CODE_ROOT/getsentry"
 
+install_sentry_cli
 git_clone_repo "getsentry/sentry" "$SENTRY_ROOT"
 if [ -z "$SKIP_GETSENTRY" ] && ! git_clone_repo "getsentry/getsentry" "$GETSENTRY_ROOT" 2>/dev/null; then
   # git clone failed, assume no access to getsentry and skip further getsentry steps
