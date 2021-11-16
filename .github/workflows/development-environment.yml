@@ -41,7 +41,6 @@ jobs:
       # This will ensure that we test the sentry-cli and brew installation step
       - name: Uninstall brew & others
         run: |
-          ls -l /usr/local/bin
           ./uninstall.sh
 
       - name: Execute bootstrap
