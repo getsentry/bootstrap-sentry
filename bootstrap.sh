@@ -389,6 +389,11 @@ get_shell_startup_script() {
 install_sentry_cli() {
   log "Installing sentry-cli"
   if ! command -v sentry-cli &>/dev/null; then
+    # This ensures that sentry-cli has a directory to install under
+    [ ! -d /usr/local/bin ] && (
+      sudo_askpass mkdir /usr/local/bin;
+      sudo_askpass chown ${USER}:admin /usr/local/bin
+    )
     curl -sL https://sentry.io/get-cli/ | bash
   fi
   if [ -z "$CI" ]; then
@@ -576,6 +581,8 @@ sudo_refresh
 # Before starting, get the user's code location root where we will clone sentry repos to
 get_code_root_path
 
+install_sentry_cli
+
 [ -z "$CI" ] && [ -z "$QUICK" ] && check_github_access
 
 [ "$USER" = "root" ] && abort "Run as yourself, not root."
@@ -592,7 +599,7 @@ xcode_license
 SENTRY_ROOT="$CODE_ROOT/sentry"
 GETSENTRY_ROOT="$CODE_ROOT/getsentry"
 
-install_sentry_cli
+
 git_clone_repo "getsentry/sentry" "$SENTRY_ROOT"
 if [ -z "$SKIP_GETSENTRY" ] && ! git_clone_repo "getsentry/getsentry" "$GETSENTRY_ROOT" 2>/dev/null; then
   # git clone failed, assume no access to getsentry and skip further getsentry steps
