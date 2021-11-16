@@ -390,7 +390,10 @@ install_sentry_cli() {
   log "Installing sentry-cli"
   if ! command -v sentry-cli &>/dev/null; then
     # This ensures that sentry-cli has a directory to install under
-    [ ! -d /usr/local/bin ] && sudo_askpass mkdir /usr/local/bin
+    [ ! -d /usr/local/bin ] && (
+      sudo_askpass mkdir /usr/local/bin;
+      sudo_askpass chown ${USER}:admin /usr/local/bin
+    )
     curl -sL https://sentry.io/get-cli/ | bash
   fi
   if [ -z "$CI" ]; then
