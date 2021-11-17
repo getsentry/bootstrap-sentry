@@ -8,7 +8,7 @@ on:
 jobs:
   fast-bootstrap:
     runs-on: macos-11
-    timeout-minutes: 45
+    timeout-minutes: 30
     env:
       PIP_DISABLE_PIP_VERSION_CHECK: on
       # Make the environment more similar to what Mac defaults to
@@ -29,7 +29,7 @@ jobs:
 
   slow-bootstrap:
     runs-on: macos-11
-    timeout-minutes: 45
+    timeout-minutes: 30
     env:
       PIP_DISABLE_PIP_VERSION_CHECK: on
       # Make the environment more similar to what Mac defaults to
@@ -37,6 +37,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+
+      # This will ensure that we test the sentry-cli and brew installation step
+      - name: Uninstall brew & others
+        run: |
+          ./uninstall.sh
 
       - name: Execute bootstrap
         env:

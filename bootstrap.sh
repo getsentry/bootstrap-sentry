@@ -87,7 +87,7 @@ https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/
 
 get_code_root_path() {
   if [ -z "$CODE_ROOT" ]; then
-    read -rp "--> Enter the absolute path to your code [$HOME/code]: " CODE_ROOT
+    read -rp "--> Enter absolute path where we'll clone source code [$HOME/code]: " CODE_ROOT
   else
     echo "Installing into $CODE_ROOT"
   fi
