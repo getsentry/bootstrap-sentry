@@ -25,5 +25,5 @@ pre-commit install
 
 Test your changes locally by running:
 ```
-./bootstraph.sh
+./bootstrap.sh
 ```
