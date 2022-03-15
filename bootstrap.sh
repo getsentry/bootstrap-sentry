@@ -601,6 +601,8 @@ GETSENTRY_ROOT="$CODE_ROOT/getsentry"
 
 
 git_clone_repo "getsentry/sentry" "$SENTRY_ROOT"
+# This enables testing a different Sentry branch
+[ -n "$CI_CHECKOUT_BRANCH" ] && cd "$SENTRY_ROOT" && git checkout "$CI_CHECKOUT_BRANCH"
 if [ -z "$SKIP_GETSENTRY" ] && ! git_clone_repo "getsentry/getsentry" "$GETSENTRY_ROOT" 2>/dev/null; then
   # git clone failed, assume no access to getsentry and skip further getsentry steps
   SKIP_GETSENTRY=1
