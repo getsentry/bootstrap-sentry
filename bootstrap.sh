@@ -645,8 +645,6 @@ if [ -z "$SKIP_GETSENTRY" ] && [ -d "$GETSENTRY_ROOT" ]; then
   cd "$GETSENTRY_ROOT"
   log "You'll need to restart your shell and then run getsentry: \`exec $SHELL && getsentry devserver\`"
 else
-  # shellcheck disable=SC2093
-  exec "$SHELL"
   cd "$SENTRY_ROOT"
   log "You'll need to restart your shell and then run sentry: \`exec $SHELL && sentry devserver\`"
 fi
