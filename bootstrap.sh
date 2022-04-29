@@ -391,11 +391,10 @@ install_sentry_cli() {
   if ! command -v sentry-cli &>/dev/null; then
     # This ensures that sentry-cli has a directory to install under
     [ ! -d /usr/local/bin ] && (
-      sudo_askpass mkdir /usr/local/bin
+      sudo_askpass mkdir /usr/local/bin;
       sudo_askpass chown ${USER}:admin /usr/local/bin
     )
-    # XXX: Temporary install version 1.74.3 until we upgrade to version 2.x
-    curl -sL https://gist.githubusercontent.com/armenzg/96481b0b653ecf807900373f5af09816/raw/caf5695e0eb6c214ec84f9fc217965aec928acc0/get-cli.sh | bash
+    curl -sL https://sentry.io/get-cli/ | bash
   fi
   if [ -z "$CI" ]; then
     # This is used to report issues when a new engineer encounters issues with this script
@@ -599,6 +598,7 @@ xcode_license
 ### Sentry stuff ###
 SENTRY_ROOT="$CODE_ROOT/sentry"
 GETSENTRY_ROOT="$CODE_ROOT/getsentry"
+
 
 git_clone_repo "getsentry/sentry" "$SENTRY_ROOT"
 # This enables testing a different Sentry branch
