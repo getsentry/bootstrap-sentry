@@ -394,7 +394,7 @@ install_sentry_cli() {
       sudo_askpass mkdir /usr/local/bin
       sudo_askpass chown ${USER}:admin /usr/local/bin
     )
-    curl -sL https://sentry.io/get-cli/ | VERSION=2.0.4 bash
+    curl -sL https://sentry.io/get-cli/ | SENTRY_CLI_VERSION=2.0.4 bash
   fi
   if [ -z "$CI" ]; then
     # This is used to report issues when a new engineer encounters issues with this script
