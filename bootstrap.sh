@@ -494,8 +494,7 @@ install_volta() {
   if ! command -v volta &>/dev/null; then
     log "Install volta"
     curl https://get.volta.sh | bash
-    # shellcheck disable=SC1090
-    source "$(get_shell_startup_script)"
+    export PATH="${HOME}/.volta/bin:$PATH"
     logk
   fi
 }
