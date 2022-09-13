@@ -494,7 +494,8 @@ install_volta() {
   if ! command -v volta &>/dev/null; then
     log "Install volta"
     curl https://get.volta.sh | bash
-    export PATH="${HOME}/.volta/bin:$PATH"
+    export VOLTA_HOME="${HOME}/.volta"
+    export PATH="${VOLTA_HOME}/bin:$PATH"
     logk
   fi
 }
