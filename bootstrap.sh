@@ -413,27 +413,6 @@ git_clone_repo() {
   fi
 }
 
-# Open Docker.app and wait for docker server to be ready
-ensure_docker_server() {
-  if [ -d "/Applications/Docker.app" ]; then
-    log "Starting Docker.app, if necessary..."
-    log "We will not continue the installation until you have completed the UI prompts that Docker has."
-    # We will open Docker on behalf of the user
-    # This will allow the user to interact with Docker UI prompts
-    open -g -a Docker.app
-
-    # taken from https://github.com/docker/for-mac/issues/2359#issuecomment-607154849
-    # Wait for the server to start up, if applicable.
-    local i=0
-    while ! docker system info &>/dev/null; do
-      ((i++ == 0)) && printf %s '-- Waiting for Docker to finish starting up...' || printf '.'
-      sleep 1
-    done
-    ((i)) && printf '\n'
-    logk
-  fi
-}
-
 # Install required libraries of dir ($1)
 install_prerequisites() {
   if [ -d "$1" ]; then
@@ -448,7 +427,6 @@ install_prerequisites() {
       log "Installing minimal set of requirements"
       export HOMEBREW_NO_AUTO_UPDATE=on
       brew install libxmlsec1 pyenv
-      brew install --cask docker
     fi
     logk
   fi
@@ -533,22 +511,18 @@ setup_virtualenv() {
 }
 
 bootstrap() {
-  if docker system info &>/dev/null; then
-    log "Bootstrapping env: $1"
-    # shellcheck disable=SC1091
-    cd "$1" && source .venv/bin/activate
+  log "Bootstrapping env: $1"
+  # shellcheck disable=SC1091
+  cd "$1" && source .venv/bin/activate
 
-    # Only run `make bootstrap` if config file does not exist
-    if [ ! -f "$HOME/.sentry/sentry.conf.py" ]; then
-      cd "$1" && make bootstrap
-    fi
-
-    logk
-  else
-    abort "!!! docker is not running, skipping bootstrapping...
-!!! To continue, \`open /Applications/Docker.app\` and follow the GUI instructions
-!!! Then re-run the bootstrap script or \`cd $1 && make bootstrap\`"
+  # Only run `make bootstrap` if config file does not exist
+  if [ ! -f "$HOME/.sentry/sentry.conf.py" ]; then
+    # sentry devservices will try to start and wait for the container runtime,
+    # so this should just work
+    cd "$1" && make bootstrap
   fi
+
+  logk
 }
 
 ############################
@@ -620,9 +594,6 @@ install_sentry_env_vars
 [ -n "$CI" ] && STRAP_SUCCESS=1 && exit 0
 
 install_volta
-
-# We need docker running before bootstrapping sentry
-ensure_docker_server
 
 # bootstrap sentry
 bootstrap "$SENTRY_ROOT"

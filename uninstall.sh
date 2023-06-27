@@ -16,8 +16,6 @@ remove_other() {
 remove_brew_setup() {
     # Removes all packages
     brew list -1 | xargs brew rm
-    # brew's uninstall script does not remove some things
-    [ -d /Applications/Docker.app ] && rm -rf /Applications/Docker.app
     # Execute the official uninstall command
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/uninstall.sh)"
     # This is not removed by the script.
