@@ -15,7 +15,6 @@ touch "${HOME}/.zshrc"
 
 if [ -n "$CI" ]; then
   echo "Running within CI..."
-  CODE_ROOT="$HOME/code"
   SKIP_METRICS=1
   GIT_URL_PREFIX="https://github.com/"
   SKIP_GETSENTRY=1
@@ -77,11 +76,6 @@ https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/
     echo >&2 "$resp"
     echo >&2 "$github_message"
     exit 1
-  fi
-
-  if [ -z "$GITHUB_USER" ]; then
-    SKIP_GETSENTRY=1
-    echo "You are not identified with GitHub, skipping \`getsentry\`"
   fi
 
   record_metric "bootstrap_start"
@@ -245,19 +239,19 @@ xcode_license() {
 install_homebrew() {
   logn "Installing Homebrew:"
   sudo_askpass chown "$USER" /opt
-  prefix="/opt/homebrew"
-  [ -z "$CI" ] && prefix="/usr/local"
-  git clone --depth=1 "https://github.com/Homebrew/brew" "$prefix"
-  export PATH="${prefix}/bin:${PATH}"
+  where="/opt/homebrew"
+  [ -n "$CI" ] && where="/usr/local/Homebrew"
+  [ -d "$where" ] || git clone --depth=1 "https://github.com/Homebrew/brew" "$where"
+  export PATH="${where}/bin:${PATH}"
   [ -z "$QUICK" ] && {
-    logn "Updating Homebrew:"
+    logn "Updating Homebrew"
     brew update --quiet
   }
   logk
 
   if ! grep -qF "brew shellenv" "${HOME}/.zshrc"; then
     #shellcheck disable=SC2016
-    echo -e 'eval "$(${prefix}/bin/brew shellenv)"' >> "${HOME}/.zshrc"
+    echo -e 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> "${HOME}/.zshrc"
   fi
   logk
 }
@@ -270,7 +264,7 @@ install_sentry_cli() {
     # This ensures that sentry-cli has a directory to install under
     [ ! -d /usr/local/bin ] && (
       sudo_askpass mkdir /usr/local/bin
-      sudo_askpass chown ${USER}:admin /usr/local/bin
+      sudo_askpass chown "$USER" /usr/local/bin
     )
     curl -sL https://sentry.io/get-cli/ | SENTRY_CLI_VERSION=2.0.4 bash
   fi
@@ -403,7 +397,6 @@ if [ "$OSNAME" != "Darwin" ]; then
 fi
 
 [ "$USER" = "root" ] && abort "Run as yourself, not root."
-groups | grep $Q -E "\b(admin)\b" || abort "Add $USER to the admin group."
 
 trap "cleanup" EXIT
 
@@ -459,14 +452,9 @@ bootstrap "$SENTRY_ROOT"
 
 # Installing direnv after we boostrap to make sure our dev env does not depend on it
 install_direnv
+direnv allow
 
-# bootstrap getsentry now
 if [ -z "$SKIP_GETSENTRY" ] && [ -d "$GETSENTRY_ROOT" ]; then
-  # Shutdown devservices so that we can install getsentry
-  sentry devservices down
-  direnv allow
-  deactivate
-
   setup_virtualenv "$GETSENTRY_ROOT"
   bootstrap "$GETSENTRY_ROOT"
   direnv allow
