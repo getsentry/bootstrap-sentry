@@ -426,7 +426,7 @@ fi
 touch "${HOME}/.zshrc"
 
 sudo_refresh
-sudo networksetup -setv6off "Wi-Fi"
+[ -z "$CI" ] && sudo networksetup -setv6off "Wi-Fi"
 install_xcode_cli
 xcode_license
 install_sentry_cli
