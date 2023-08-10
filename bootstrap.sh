@@ -11,14 +11,14 @@ GIT_URL_PREFIX="git@github.com:"
 CODE_ROOT="${HOME}/code"
 mkdir -p "$CODE_ROOT"
 
+touch "${HOME}/.zshrc"
+
 if [ -n "$CI" ]; then
   echo "Running within CI..."
   CODE_ROOT="$HOME/code"
   SKIP_METRICS=1
   GIT_URL_PREFIX="https://github.com/"
   SKIP_GETSENTRY=1
-  # The workflow sets the SHELL to zsh
-  touch "${HOME}/.zshrc"
 fi
 
 bootstrap_sentry="$HOME/.sentry/bootstrap-sentry"
@@ -324,21 +324,17 @@ setup_pyenv() {
 }
 
 install_sentry_env_vars() {
-  _script="${HOME}/.zshrc"
-
   logn "Installing sentry env vars to startup script..."
 
-  if [ -n "$_script" ]; then
-    # This will be used to measure webpack
-    if ! grep -qF "SENTRY_INSTRUMENTATION" "$_script"; then
-      echo "export SENTRY_INSTRUMENTATION=1" >>"$_script"
-    fi
-    if ! grep -qF "SENTRY_POST_MERGE_AUTO_UPDATE" "$_script"; then
-      echo "export SENTRY_POST_MERGE_AUTO_UPDATE=1" >>"$_script"
-    fi
-    if ! grep -qF "SENTRY_SPA_DSN" "$_script"; then
-      echo "export SENTRY_SPA_DSN=https://863de587a34a48c4a4ef1a9238fdb0b1@o19635.ingest.sentry.io/5270453" >>"$_script"
-    fi
+  # This will be used to measure webpack
+  if ! grep -qF "SENTRY_INSTRUMENTATION" "${HOME}/.zshrc"; then
+    echo "export SENTRY_INSTRUMENTATION=1" >>"${HOME}/.zshrc"
+  fi
+  if ! grep -qF "SENTRY_POST_MERGE_AUTO_UPDATE" "${HOME}/.zshrc"; then
+    echo "export SENTRY_POST_MERGE_AUTO_UPDATE=1" >> "${HOME}/.zshrc"
+  fi
+  if ! grep -qF "SENTRY_SPA_DSN" "${HOME}/.zshrc"; then
+    echo "export SENTRY_SPA_DSN=https://863de587a34a48c4a4ef1a9238fdb0b1@o19635.ingest.sentry.io/5270453" >> "${HOME}/.zshrc"
   fi
 
   logk
@@ -355,16 +351,10 @@ install_volta() {
 }
 
 install_direnv_startup() {
-  _script="${HOME}/.zshrc"
-
   logn "Installing direnv startup script..."
 
-  if [ -n "$_script" ]; then
-    if ! grep -qF "direnv hook" "$_script"; then
-      echo "eval \"\$(direnv hook zsh)\"" >>"$_script"
-    else
-      logn " skipping (already installed)... "
-    fi
+  if ! grep -qF "direnv hook" "${HOME}/.zshrc"; then
+    echo "eval \"\$(direnv hook zsh)\"" >> "${HOME}/.zshrc"
   fi
 
   logk
