@@ -7,7 +7,7 @@ on:
 
 jobs:
   fast-bootstrap:
-    runs-on: macos-11
+    runs-on: macos-13
     timeout-minutes: 30
     env:
       PIP_DISABLE_PIP_VERSION_CHECK: on
@@ -15,7 +15,7 @@ jobs:
       SHELL: /bin/zsh
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Execute bootstrap
         env:
@@ -30,7 +30,7 @@ jobs:
           ./bootstrap.sh
 
   slow-bootstrap:
-    runs-on: macos-11
+    runs-on: macos-13
     timeout-minutes: 30
     env:
       PIP_DISABLE_PIP_VERSION_CHECK: on
@@ -38,7 +38,7 @@ jobs:
       SHELL: /bin/zsh
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       # This will ensure that we test the sentry-cli and brew installation step
       - name: Uninstall brew & others
