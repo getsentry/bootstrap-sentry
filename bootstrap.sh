@@ -416,6 +416,7 @@ STDIN_FILE_DESCRIPTOR="0"
 caffeinate -s -w $$ &
 
 sudo_refresh
+sudo networksetup -setv6off "Wi-Fi"
 install_xcode_cli
 xcode_license
 
