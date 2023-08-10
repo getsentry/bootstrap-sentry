@@ -8,6 +8,9 @@ set -e
 # Default cloning value.
 GIT_URL_PREFIX="git@github.com:"
 
+CODE_ROOT="${HOME}/code"
+mkdir -p "$CODE_ROOT"
+
 if [ -n "$CI" ]; then
   echo "Running within CI..."
   CODE_ROOT="$HOME/code"
@@ -83,20 +86,6 @@ https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/
 
   record_metric "bootstrap_start"
   logk
-}
-
-get_code_root_path() {
-  if [ -z "$CODE_ROOT" ]; then
-    read -rp "--> Enter absolute path where we'll clone source code [$HOME/code]: " CODE_ROOT
-  else
-    echo "Installing into $CODE_ROOT"
-  fi
-
-  if [ -z "$CODE_ROOT" ]; then
-    CODE_ROOT="$HOME/code"
-  fi
-
-  [ -d "$CODE_ROOT" ] || mkdir -p "$CODE_ROOT"
 }
 
 sudo_askpass() {
@@ -254,134 +243,21 @@ xcode_license() {
 }
 
 install_homebrew() {
-  # Setup Homebrew directory and permissions.
   logn "Installing Homebrew:"
-  HOMEBREW_PREFIX="$(brew --prefix 2>/dev/null || true)"
-  HOMEBREW_REPOSITORY="$(brew --repository 2>/dev/null || true)"
-  if [ -z "$HOMEBREW_PREFIX" ] || [ -z "$HOMEBREW_REPOSITORY" ]; then
-    UNAME_MACHINE="$(/usr/bin/uname -m)"
-    if [[ "$UNAME_MACHINE" == "arm64" ]]; then
-      HOMEBREW_PREFIX="/opt/homebrew"
-      HOMEBREW_REPOSITORY="${HOMEBREW_PREFIX}"
-    else
-      HOMEBREW_PREFIX="/usr/local"
-      HOMEBREW_REPOSITORY="${HOMEBREW_PREFIX}/Homebrew"
-    fi
-  fi
-  [ -d "$HOMEBREW_PREFIX" ] || sudo_askpass mkdir -p "$HOMEBREW_PREFIX"
-  if [ "$HOMEBREW_PREFIX" = "/usr/local" ]; then
-    sudo_askpass chown "root:wheel" "$HOMEBREW_PREFIX" 2>/dev/null || true
-  fi
-  (
-    cd "$HOMEBREW_PREFIX"
-    sudo_askpass mkdir -p Cellar Caskroom Frameworks bin etc include lib opt sbin share var
-    sudo_askpass chown "$USER:admin" Cellar Caskroom Frameworks bin etc include lib opt sbin share var
-  )
-
-  [ -d "$HOMEBREW_REPOSITORY" ] || sudo_askpass mkdir -p "$HOMEBREW_REPOSITORY"
-  sudo_askpass chown -R "$USER:admin" "$HOMEBREW_REPOSITORY"
-
-  if [ $HOMEBREW_PREFIX != $HOMEBREW_REPOSITORY ]; then
-    ln -sf "$HOMEBREW_REPOSITORY/bin/brew" "$HOMEBREW_PREFIX/bin/brew"
-  fi
-
-  # Download Homebrew.
-  export GIT_DIR="$HOMEBREW_REPOSITORY/.git" GIT_WORK_TREE="$HOMEBREW_REPOSITORY"
-  git init $Q
-  git config remote.origin.url "https://github.com/Homebrew/brew"
-  git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*"
-  git fetch $Q --tags --force
-  git reset $Q --hard origin/master
-  unset GIT_DIR GIT_WORK_TREE
+  sudo_askpass chown "$USER" /opt
+  git clone --depth=1 "https://github.com/Homebrew/brew" /opt/homebrew
+  export PATH="/opt/homebrew/bin:${PATH}"
+  [ -z "$QUICK" ] && {
+    logn "Updating Homebrew:"
+    brew update --quiet
+  }
   logk
 
-  # Update Homebrew.
-  export PATH="$HOMEBREW_PREFIX/bin:$PATH"
-  logn "Updating Homebrew:"
-  [ -z "$QUICK" ] && brew update --quiet
+  if ! grep -qF "brew shellenv" "${HOME}/.zshrc"; then
+    #shellcheck disable=SC2016
+    echo -e 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> "${HOME}/.zshrc"
+  fi
   logk
-
-  # On Apple M1 machines we need to add this to the profile
-  if [[ "$(uname -m)" == "arm64" ]]; then
-    shell_profile=$(get_brew_profile)
-    eval "$(/opt/homebrew/bin/brew shellenv)"
-    if ! grep -qF "brew shellenv" "${shell_profile}"; then
-      #shellcheck disable=SC2016
-      echo -e 'eval "$(/opt/homebrew/bin/brew shellenv)"' >>${shell_profile}
-    fi
-  fi
-
-  # Install Homebrew Bundle, Cask and Services tap.
-  log "Installing Homebrew taps and extensions:"
-  brew bundle --quiet --file=- <<RUBY
-tap "homebrew/cask"
-tap "homebrew/core"
-tap "homebrew/services"
-RUBY
-  logk
-}
-
-# Check and install any remaining software updates.
-software_update() {
-  logn "Checking for software updates:"
-  updates=$(softwareupdate -l 2>&1)
-  if echo "$updates" | grep "$Q" "No new software available."; then
-    logk
-  else
-    echo
-    if [ "$1" == "reminder" ]; then
-      log "You have system updates to install. Please check for updates if you wish to install them."
-      log "$updates"
-    elif [ -z "$CI" ]; then
-      log "Installing software updates:"
-      sudo_askpass softwareupdate --install --all
-      xcode_license
-    else
-      echo "Skipping software updates for CI"
-    fi
-    logk
-  fi
-}
-
-get_shell_name() {
-  case "$SHELL" in
-  /bin/bash)
-    echo "bash"
-    ;;
-  /bin/zsh)
-    echo "zsh"
-    ;;
-  esac
-}
-
-# From https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh
-get_brew_profile() {
-  case "${SHELL}" in
-  */bash*)
-    if [[ -r "${HOME}/.bash_profile" ]]; then
-      shell_profile="${HOME}/.bash_profile"
-    else
-      shell_profile="${HOME}/.profile"
-    fi
-    ;;
-  */zsh*)
-    shell_profile="${HOME}/.zprofile"
-    ;;
-  *)
-    shell_profile="${HOME}/.profile"
-    ;;
-  esac
-  echo $shell_profile
-}
-
-get_shell_startup_script() {
-  local _shell
-  _shell=$(get_shell_name)
-
-  if [ -n "$_shell" ]; then
-    # TODO find correct startup script to source
-    echo "$HOME/.${_shell}rc"
-  fi
 }
 
 # Install Sentry CLI so that we can track errors that happen in this bootstrap script
@@ -420,12 +296,13 @@ install_prerequisites() {
       log "Installing from sentry Brewfile (very slow)"
       # This makes sure that we don't try to install Python packages from the cache
       # This is useful when verifying a new platform and multiple executions of bootstrap.sh is required
-      export PIP_NO_CACHE_DIR=on
+      export PIP_NO_CACHE_DIR=1
       # The fallback is useful when trying to run the script on a non-clean machine multiple times
       cd "$1" && (make prerequisites || log "Something failed during brew bundle but let's try to continue")
     else
       log "Installing minimal set of requirements"
-      export HOMEBREW_NO_AUTO_UPDATE=on
+      export HOMEBREW_NO_AUTO_UPDATE=1
+      export HOMEBREW_NO_ANALYTICS=1
       brew install libxmlsec1 pyenv
     fi
     logk
@@ -447,8 +324,7 @@ setup_pyenv() {
 }
 
 install_sentry_env_vars() {
-  local _script
-  _script=$(get_shell_startup_script)
+  _script="${HOME}/.zshrc"
 
   logn "Installing sentry env vars to startup script..."
 
@@ -479,14 +355,13 @@ install_volta() {
 }
 
 install_direnv_startup() {
-  local _script
-  _script=$(get_shell_startup_script)
+  _script="${HOME}/.zshrc"
 
   logn "Installing direnv startup script..."
 
   if [ -n "$_script" ]; then
     if ! grep -qF "direnv hook" "$_script"; then
-      echo "eval \"\$(direnv hook $(get_shell_name))\"" >>"$_script"
+      echo "eval \"\$(direnv hook zsh)\"" >>"$_script"
     else
       logn " skipping (already installed)... "
     fi
@@ -551,9 +426,6 @@ STDIN_FILE_DESCRIPTOR="0"
 # We want to always prompt for sudo password at least once rather than doing
 # root stuff unexpectedly.
 sudo_refresh
-
-# Before starting, get the user's code location root where we will clone sentry repos to
-get_code_root_path
 
 install_sentry_cli
 
@@ -622,5 +494,3 @@ fi
 record_metric "bootstrap_passed"
 STRAP_SUCCESS="1"
 log "Your system is now bootstrapped! 🌮"
-
-software_update "reminder"
