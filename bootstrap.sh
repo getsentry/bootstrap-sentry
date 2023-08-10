@@ -245,8 +245,10 @@ xcode_license() {
 install_homebrew() {
   logn "Installing Homebrew:"
   sudo_askpass chown "$USER" /opt
-  git clone --depth=1 "https://github.com/Homebrew/brew" /opt/homebrew
-  export PATH="/opt/homebrew/bin:${PATH}"
+  prefix="/opt/homebrew"
+  [ -z "$CI" ] && prefix="/usr/local"
+  git clone --depth=1 "https://github.com/Homebrew/brew" "$prefix"
+  export PATH="${prefix}/bin:${PATH}"
   [ -z "$QUICK" ] && {
     logn "Updating Homebrew:"
     brew update --quiet
@@ -255,7 +257,7 @@ install_homebrew() {
 
   if ! grep -qF "brew shellenv" "${HOME}/.zshrc"; then
     #shellcheck disable=SC2016
-    echo -e 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> "${HOME}/.zshrc"
+    echo -e 'eval "$(${prefix}/bin/brew shellenv)"' >> "${HOME}/.zshrc"
   fi
   logk
 }

@@ -7,7 +7,8 @@
 
 if [ -n "$CI" ]; then
   # macos in GHA is intel-only, so make sure we remove its brew
-  sudo rm -rf /usr/local/bin/brew
+  sudo rm -rf /usr/local/Homebrew
+  sudo rm -f /usr/local/bin/brew
 fi
 
 sudo rm -rf /opt/homebrew
@@ -16,6 +17,4 @@ rm -rf ~/.pyenv
 rm -rf ~/.sentry
 rm -rf ~/code/sentry/{.venv,node_modules}
 rm -rf ~/code/getsentry/{.venv,node_modules}
-[ -f ~/.zprofile ] && rm ~/.zprofile
-
-echo "Successfully uninstalled brew and other"
+rm -f ~/.profile ~/.zprofile ~/.zshrc
