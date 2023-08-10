@@ -24,8 +24,6 @@ jobs:
           # - Only install required libraries rather than brew bundle
           # - Skip updating Homebrew
           QUICK: 1
-          # You can use this to test a different Sentry branch
-          # CI_CHECKOUT_BRANCH: name_of_sentry_branch
         run: |
           ./bootstrap.sh
 

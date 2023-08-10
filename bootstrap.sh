@@ -8,13 +8,9 @@ set -e
 # Default cloning value.
 GIT_URL_PREFIX="git@github.com:"
 
-CODE_ROOT="${HOME}/code"
-mkdir -p "$CODE_ROOT"
-
-touch "${HOME}/.zshrc"
-
 if [ -n "$CI" ]; then
   echo "Running within CI..."
+  CODE_ROOT="$HOME/code"
   SKIP_METRICS=1
   GIT_URL_PREFIX="https://github.com/"
   SKIP_GETSENTRY=1
@@ -415,11 +411,24 @@ STDIN_FILE_DESCRIPTOR="0"
 # Prevent sleeping during script execution, as long as the machine is on AC power
 caffeinate -s -w $$ &
 
+if [ -z "$CODE_ROOT" ]; then
+    read -rp "--> Enter absolute path where we'll clone source code [$HOME/code]: " CODE_ROOT
+else
+    echo "Installing into $CODE_ROOT"
+fi
+
+if [ -z "$CODE_ROOT" ]; then
+    CODE_ROOT="$HOME/code"
+fi
+
+[ -d "$CODE_ROOT" ] || mkdir -p "$CODE_ROOT"
+
+touch "${HOME}/.zshrc"
+
 sudo_refresh
 sudo networksetup -setv6off "Wi-Fi"
 install_xcode_cli
 xcode_license
-
 install_sentry_cli
 [ -z "$CI" ] && [ -z "$QUICK" ] && check_github_access
 [ -z "$QUICK" ] && install_homebrew
@@ -429,8 +438,6 @@ SENTRY_ROOT="$CODE_ROOT/sentry"
 GETSENTRY_ROOT="$CODE_ROOT/getsentry"
 
 git_clone_repo "getsentry/sentry" "$SENTRY_ROOT"
-# This enables testing a different Sentry branch
-[ -n "$CI_CHECKOUT_BRANCH" ] && cd "$SENTRY_ROOT" && git checkout "$CI_CHECKOUT_BRANCH"
 if [ -z "$SKIP_GETSENTRY" ] && ! git_clone_repo "getsentry/getsentry" "$GETSENTRY_ROOT" 2>/dev/null; then
   # git clone failed, assume no access to getsentry and skip further getsentry steps
   SKIP_GETSENTRY=1
