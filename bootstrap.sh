@@ -405,11 +405,13 @@ bootstrap() {
 ############################
 
 OSNAME="$(uname -s)"
-# TODO: Support other OSes
 if [ "$OSNAME" != "Darwin" ]; then
   echo "'$OSNAME' not supported"
   exit 1
 fi
+
+[ "$USER" = "root" ] && abort "Run as yourself, not root."
+groups | grep $Q -E "\b(admin)\b" || abort "Add $USER to the admin group."
 
 trap "cleanup" EXIT
 
@@ -423,22 +425,15 @@ fi
 STDIN_FILE_DESCRIPTOR="0"
 [ -t "$STDIN_FILE_DESCRIPTOR" ] && STRAP_INTERACTIVE="1"
 
-# We want to always prompt for sudo password at least once rather than doing
-# root stuff unexpectedly.
-sudo_refresh
-
-install_sentry_cli
-
-[ -z "$CI" ] && [ -z "$QUICK" ] && check_github_access
-
-[ "$USER" = "root" ] && abort "Run as yourself, not root."
-groups | grep $Q -E "\b(admin)\b" || abort "Add $USER to the admin group."
-
 # Prevent sleeping during script execution, as long as the machine is on AC power
 caffeinate -s -w $$ &
 
+sudo_refresh
 install_xcode_cli
 xcode_license
+
+install_sentry_cli
+[ -z "$CI" ] && [ -z "$QUICK" ] && check_github_access
 [ -z "$QUICK" ] && install_homebrew
 
 ### Sentry stuff ###
