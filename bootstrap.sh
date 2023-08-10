@@ -278,7 +278,7 @@ git_clone_repo() {
     log "Cloning $1 to $2"
     flags=
     [ -n "$CI" ] && flags='--depth=1'
-    git clone "$flags" "${GIT_URL_PREFIX}$1.git" "$2"
+    git clone $flags "${GIT_URL_PREFIX}$1.git" "$2"
     logk
   fi
 }
