@@ -256,34 +256,19 @@ xcode_license() {
 install_homebrew() {
   # Setup Homebrew directory and permissions.
   logn "Installing Homebrew:"
-  HOMEBREW_PREFIX="$(brew --prefix 2>/dev/null || true)"
-  HOMEBREW_REPOSITORY="$(brew --repository 2>/dev/null || true)"
-  if [ -z "$HOMEBREW_PREFIX" ] || [ -z "$HOMEBREW_REPOSITORY" ]; then
-    UNAME_MACHINE="$(/usr/bin/uname -m)"
-    if [[ "$UNAME_MACHINE" == "arm64" ]]; then
-      HOMEBREW_PREFIX="/opt/homebrew"
-      HOMEBREW_REPOSITORY="${HOMEBREW_PREFIX}"
-    else
-      HOMEBREW_PREFIX="/usr/local"
-      HOMEBREW_REPOSITORY="${HOMEBREW_PREFIX}/Homebrew"
-    fi
-  fi
-  [ -d "$HOMEBREW_PREFIX" ] || sudo_askpass mkdir -p "$HOMEBREW_PREFIX"
-  if [ "$HOMEBREW_PREFIX" = "/usr/local" ]; then
-    sudo_askpass chown "root:wheel" "$HOMEBREW_PREFIX" 2>/dev/null || true
-  fi
-  (
-    cd "$HOMEBREW_PREFIX"
-    sudo_askpass mkdir -p Cellar Caskroom Frameworks bin etc include lib opt sbin share var
-    sudo_askpass chown "$USER:admin" Cellar Caskroom Frameworks bin etc include lib opt sbin share var
-  )
 
-  [ -d "$HOMEBREW_REPOSITORY" ] || sudo_askpass mkdir -p "$HOMEBREW_REPOSITORY"
-  sudo_askpass chown -R "$USER:admin" "$HOMEBREW_REPOSITORY"
-
-  if [ $HOMEBREW_PREFIX != $HOMEBREW_REPOSITORY ]; then
-    ln -sf "$HOMEBREW_REPOSITORY/bin/brew" "$HOMEBREW_PREFIX/bin/brew"
+  if [[ "$UNAME_MACHINE" == "arm64" ]]; then
+    HOMEBREW_PREFIX="/opt/homebrew"
+    HOMEBREW_REPOSITORY="${HOMEBREW_PREFIX}"
+  else
+    HOMEBREW_PREFIX="/usr/local"
+    HOMEBREW_REPOSITORY="${HOMEBREW_PREFIX}/Homebrew"
   fi
+
+  sudo_askpass chown "$USER" "$HOMEBREW_REPOSITORY" 2>/dev/null || true
+  [ -d "$HOMEBREW_REPOSITORY" ] || mkdir -p "$HOMEBREW_REPOSITORY"
+
+  git -C "$HOMEBREW_REPOSITORY" clone --depth=1 "https://github.com/Homebrew/brew" .
 
   # Download Homebrew.
   export GIT_DIR="$HOMEBREW_REPOSITORY/.git" GIT_WORK_TREE="$HOMEBREW_REPOSITORY"
@@ -296,29 +281,18 @@ install_homebrew() {
   logk
 
   # Update Homebrew.
-  export PATH="$HOMEBREW_PREFIX/bin:$PATH"
-  logn "Updating Homebrew:"
-  [ -z "$QUICK" ] && brew update --quiet
+  export PATH="${HOMEBREW_REPOSITORY}/bin:$PATH"
+  [ -z "$QUICK" ] && {
+    logn "Updating Homebrew:"
+    brew update --quiet
+  }
   logk
 
-  # On Apple M1 machines we need to add this to the profile
-  if [[ "$(uname -m)" == "arm64" ]]; then
-    shell_profile=$(get_brew_profile)
-    eval "$(/opt/homebrew/bin/brew shellenv)"
-    if ! grep -qF "brew shellenv" "${shell_profile}"; then
-      #shellcheck disable=SC2016
-      echo -e 'eval "$(/opt/homebrew/bin/brew shellenv)"' >>${shell_profile}
-    fi
+  shell_rc=$(get_shell_startup_script)
+  if ! grep -qF "brew shellenv" "$shell_rc"; then
+    #shellcheck disable=SC2016
+    echo -e 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> "$shell_rc"
   fi
-
-  # Install Homebrew Bundle, Cask and Services tap.
-  log "Installing Homebrew taps and extensions:"
-  brew bundle --quiet --file=- <<RUBY
-tap "homebrew/cask"
-tap "homebrew/core"
-tap "homebrew/services"
-RUBY
-  logk
 }
 
 get_shell_name() {
@@ -332,33 +306,12 @@ get_shell_name() {
   esac
 }
 
-# From https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh
-get_brew_profile() {
-  case "${SHELL}" in
-  */bash*)
-    if [[ -r "${HOME}/.bash_profile" ]]; then
-      shell_profile="${HOME}/.bash_profile"
-    else
-      shell_profile="${HOME}/.profile"
-    fi
-    ;;
-  */zsh*)
-    shell_profile="${HOME}/.zprofile"
-    ;;
-  *)
-    shell_profile="${HOME}/.profile"
-    ;;
-  esac
-  echo $shell_profile
-}
-
 get_shell_startup_script() {
   local _shell
   _shell=$(get_shell_name)
 
   if [ -n "$_shell" ]; then
-    # TODO find correct startup script to source
-    echo "$HOME/.${_shell}rc"
+    echo "${HOME}/.${_shell}rc"
   fi
 }
 
@@ -386,7 +339,9 @@ install_sentry_cli() {
 git_clone_repo() {
   if [ ! -d "$2" ]; then
     log "Cloning $1 to $2"
-    git clone -q "${GIT_URL_PREFIX}$1.git" "$2"
+    flags=
+    [ -n "$CI" ] && flags='--depth=1'
+    git clone $flags "${GIT_URL_PREFIX}$1.git" "$2"
     logk
   fi
 }
@@ -398,12 +353,13 @@ install_prerequisites() {
       log "Installing from sentry Brewfile (very slow)"
       # This makes sure that we don't try to install Python packages from the cache
       # This is useful when verifying a new platform and multiple executions of bootstrap.sh is required
-      export PIP_NO_CACHE_DIR=on
+      export PIP_NO_CACHE_DIR=1
       # The fallback is useful when trying to run the script on a non-clean machine multiple times
       cd "$1" && (make prerequisites || log "Something failed during brew bundle but let's try to continue")
     else
       log "Installing minimal set of requirements"
-      export HOMEBREW_NO_AUTO_UPDATE=on
+      export HOMEBREW_NO_AUTO_UPDATE=1
+      export HOMEBREW_NO_ANALYTICS=1
       brew install libxmlsec1 pyenv
     fi
     logk
