@@ -263,8 +263,8 @@ install_homebrew() {
     HOMEBREW_REPOSITORY="/usr/local/Homebrew"
   fi
 
-  sudo_askpass chown "$USER" "$HOMEBREW_REPOSITORY" 2>/dev/null || true
-  [ -d "$HOMEBREW_REPOSITORY" ] || mkdir -p "$HOMEBREW_REPOSITORY"
+  [ -d "$HOMEBREW_REPOSITORY" ] || sudo_askpass mkdir -p "$HOMEBREW_REPOSITORY"
+  sudo_askpass chown "$USER" "$HOMEBREW_REPOSITORY"
 
   git -C "$HOMEBREW_REPOSITORY" clone --depth=1 "https://github.com/Homebrew/brew" .
 
