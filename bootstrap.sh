@@ -258,11 +258,9 @@ install_homebrew() {
   logn "Installing Homebrew:"
 
   if [[ "$UNAME_MACHINE" == "arm64" ]]; then
-    HOMEBREW_PREFIX="/opt/homebrew"
-    HOMEBREW_REPOSITORY="${HOMEBREW_PREFIX}"
+    HOMEBREW_REPOSITORY="/opt/homebrew"
   else
-    HOMEBREW_PREFIX="/usr/local"
-    HOMEBREW_REPOSITORY="${HOMEBREW_PREFIX}/Homebrew"
+    HOMEBREW_REPOSITORY="/usr/local/Homebrew"
   fi
 
   sudo_askpass chown "$USER" "$HOMEBREW_REPOSITORY" 2>/dev/null || true
