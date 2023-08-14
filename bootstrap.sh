@@ -321,28 +321,6 @@ RUBY
   logk
 }
 
-# Check and install any remaining software updates.
-software_update() {
-  logn "Checking for software updates:"
-  updates=$(softwareupdate -l 2>&1)
-  if echo "$updates" | grep "$Q" "No new software available."; then
-    logk
-  else
-    echo
-    if [ "$1" == "reminder" ]; then
-      log "You have system updates to install. Please check for updates if you wish to install them."
-      log "$updates"
-    elif [ -z "$CI" ]; then
-      log "Installing software updates:"
-      sudo_askpass softwareupdate --install --all
-      xcode_license
-    else
-      echo "Skipping software updates for CI"
-    fi
-    logk
-  fi
-}
-
 get_shell_name() {
   case "$SHELL" in
   /bin/bash)
@@ -536,6 +514,14 @@ if [ "$OSNAME" != "Darwin" ]; then
   exit 1
 fi
 
+case "$(sw_vers -productVersion)" in
+    *11.*|*12.*|*13.0*|*13.1*|*13.2*)
+        # We need people to be on at least 13.3 for colima to work.
+        echo "Your Mac is on an unsupported version. Please upgrade to at least 13.3."
+        exit 1
+        ;;
+esac
+
 trap "cleanup" EXIT
 
 if [ -n "$STRAP_DEBUG" ]; then
@@ -622,5 +608,3 @@ fi
 record_metric "bootstrap_passed"
 STRAP_SUCCESS="1"
 log "Your system is now bootstrapped! 🌮"
-
-software_update "reminder"
