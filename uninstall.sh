@@ -19,8 +19,8 @@ remove_brew_setup() {
     # Execute the official uninstall command
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/uninstall.sh)"
     # This is not removed by the script.
-    [ -d /opt/homebrew ] && sudo rm -rf /opt/homebrew
-    [ -d /usr/local/bin ] && sudo rm -rf /usr/local/bin
+    sudo rm -rf /opt/homebrew
+    sudo rm -rf /usr/local/Homebrew
 }
 
 # Uninstall brew
