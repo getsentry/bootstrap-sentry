@@ -321,7 +321,7 @@ install_sentry_cli() {
     # This ensures that sentry-cli has a directory to install under
     [ ! -d /usr/local/bin ] && (
       sudo_askpass mkdir /usr/local/bin
-      sudo_askpass chown ${USER}:admin /usr/local/bin
+      sudo_askpass chown "${USER}" /usr/local/bin
     )
     curl -sL https://sentry.io/get-cli/ | SENTRY_CLI_VERSION=2.0.4 bash
   fi
@@ -476,6 +476,8 @@ case "$(sw_vers -productVersion)" in
         ;;
 esac
 
+[ "$USER" = "root" ] && abort "Run as yourself, not root."
+
 trap "cleanup" EXIT
 
 if [ -n "$STRAP_DEBUG" ]; then
@@ -498,9 +500,6 @@ get_code_root_path
 install_sentry_cli
 
 [ -z "$CI" ] && [ -z "$QUICK" ] && check_github_access
-
-[ "$USER" = "root" ] && abort "Run as yourself, not root."
-groups | grep $Q -E "\b(admin)\b" || abort "Add $USER to the admin group."
 
 # Prevent sleeping during script execution, as long as the machine is on AC power
 caffeinate -s -w $$ &
