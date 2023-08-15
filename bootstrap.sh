@@ -277,7 +277,7 @@ install_homebrew() {
   logk
 
   shell_rc=$(get_shell_startup_script)
-  if ! grep -qF "brew shellenv" "$shell_rc"; then
+  if ! /usr/bin/grep -sF "brew shellenv" "$shell_rc"; then
     #shellcheck disable=SC2016
     echo -e 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> "$shell_rc"
   fi
