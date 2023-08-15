@@ -1,31 +1,15 @@
 #!/bin/bash
-# WARNING: You take full resposibility of what could happen to your host when executing
-#          this script. This script has only been tested on Armen's MBP arm64 machine
-#
-# This script tries to remove as much as reasonable to allow for re-testing
-# bootstrap.sh multiple times on the same host
 
-remove_other() {
-    # Remove Sentry and dependencies
-    rm -rf ~/.sentry
-    rm -rf ~/code/sentry/{.venv,node_modules}
-    rm -rf ~/code/getsentry/{.venv,node_modules}
-    [ -f ~/.zprofile ] && rm ~/.zprofile
+stuff="/opt/homebrew /usr/local/Homebrew ${HOME}/.sentry ${HOME}/code/sentry ${HOME}/code/getsentry ${HOME}/.profile ${HOME}/.zprofile ${HOME}/.zshrc"
+
+[[ "$CI" ]] && {
+    rm -rf $stuff
+    exit
 }
 
-remove_brew_setup() {
-    # Removes all packages
-    brew list -1 | xargs brew rm
-    # Execute the official uninstall command
-    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/uninstall.sh)"
-    # This is not removed by the script.
-    sudo rm -rf /opt/homebrew
-    sudo rm -rf /usr/local/Homebrew
-}
+[[ "$CI" ]] || read -p "Don't execute this unless you know what you're doing. ENTER to continue."
+[[ "$CI" ]] || read -p "Seriously, don't execute this. ENTER to continue."
 
-# Uninstall brew
-command -v brew &>/dev/null && remove_brew_setup
-
-remove_other
-
-echo "Successfully uninstalled brew and other"
+backup="${HOME}/.sentry-bootstrap-$(date +%s)"
+mkdir "$backup"
+mv -v $stuff "$backup"
