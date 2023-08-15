@@ -277,7 +277,7 @@ install_homebrew() {
   logk
 
   shell_rc=$(get_shell_startup_script)
-  if ! grep -qF "brew shellenv" "$shell_rc"; then
+  if ! /usr/bin/grep -sF "brew shellenv" "$shell_rc"; then
     #shellcheck disable=SC2016
     echo -e 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> "$shell_rc"
   fi
@@ -487,15 +487,13 @@ sudo_refresh
 # Before starting, get the user's code location root where we will clone sentry repos to
 get_code_root_path
 
-install_sentry_cli
-
-[ -z "$CI" ] && [ -z "$QUICK" ] && check_github_access
-
 # Prevent sleeping during script execution, as long as the machine is on AC power
 caffeinate -s -w $$ &
 
 install_xcode_cli
 xcode_license
+install_sentry_cli
+[ -z "$CI" ] && [ -z "$QUICK" ] && check_github_access
 [ -z "$QUICK" ] && install_homebrew
 
 ### Sentry stuff ###
