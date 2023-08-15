@@ -266,17 +266,7 @@ install_homebrew() {
   [ -d "$HOMEBREW_REPOSITORY" ] || sudo_askpass mkdir -p "$HOMEBREW_REPOSITORY"
   sudo_askpass chown "$USER" "$HOMEBREW_REPOSITORY"
 
-  git -C "$HOMEBREW_REPOSITORY" clone --depth=1 "https://github.com/Homebrew/brew" .
-
-  # Download Homebrew.
-  export GIT_DIR="$HOMEBREW_REPOSITORY/.git" GIT_WORK_TREE="$HOMEBREW_REPOSITORY"
-  git init $Q
-  git config remote.origin.url "https://github.com/Homebrew/brew"
-  git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*"
-  git fetch $Q --tags --force
-  git reset $Q --hard origin/master
-  unset GIT_DIR GIT_WORK_TREE
-  logk
+  git -C "$HOMEBREW_REPOSITORY" clone --depth=1 "https://github.com/Homebrew/brew" . || true
 
   # Update Homebrew.
   export PATH="${HOMEBREW_REPOSITORY}/bin:$PATH"
