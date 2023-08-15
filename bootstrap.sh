@@ -268,16 +268,6 @@ install_homebrew() {
 
   git -C "$HOMEBREW_REPOSITORY" clone --depth=1 "https://github.com/Homebrew/brew" .
 
-  # Download Homebrew.
-  export GIT_DIR="$HOMEBREW_REPOSITORY/.git" GIT_WORK_TREE="$HOMEBREW_REPOSITORY"
-  git init $Q
-  git config remote.origin.url "https://github.com/Homebrew/brew"
-  git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*"
-  git fetch $Q --tags --force
-  git reset $Q --hard origin/master
-  unset GIT_DIR GIT_WORK_TREE
-  logk
-
   # Update Homebrew.
   export PATH="${HOMEBREW_REPOSITORY}/bin:$PATH"
   [ -z "$QUICK" ] && {
