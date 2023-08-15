@@ -3,7 +3,8 @@
 stuff="/opt/homebrew /usr/local/Homebrew ${HOME}/.sentry ${HOME}/code/sentry ${HOME}/code/getsentry ${HOME}/.profile ${HOME}/.zprofile ${HOME}/.zshrc"
 
 [[ "$CI" ]] && {
-    rm -rf $stuff
+    # sudo shouldn't be necessary since we chown it, but it is necessary in CI's case as it comes preinstalled
+    sudo rm -rf $stuff
     exit
 }
 
