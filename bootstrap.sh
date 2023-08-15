@@ -266,7 +266,7 @@ install_homebrew() {
   [ -d "$HOMEBREW_REPOSITORY" ] || sudo_askpass mkdir -p "$HOMEBREW_REPOSITORY"
   sudo_askpass chown "$USER" "$HOMEBREW_REPOSITORY"
 
-  git -C "$HOMEBREW_REPOSITORY" clone --depth=1 "https://github.com/Homebrew/brew" .
+  git -C "$HOMEBREW_REPOSITORY" clone --depth=1 "https://github.com/Homebrew/brew" . || true
 
   # Update Homebrew.
   export PATH="${HOMEBREW_REPOSITORY}/bin:$PATH"
